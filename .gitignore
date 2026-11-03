@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Données et sorties
+data/
+reports/*
+!reports/.gitkeep
+models/*
+!models/.gitkeep
+!models/README.md
+runs/
+
+# Vidéos et poids de modèles
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.pt
+*.pth
+*.onnx
+*.h5
+*.keras
+*.engine
