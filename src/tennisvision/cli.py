@@ -1,13 +1,20 @@
-"""Interface en ligne de commande : `tennisvision analyze|clip|tenniset|models|validate`."""
+"""Interface en ligne de commande : `tennisvision analyze|clip|tenniset|models|validate|eval`."""
 
 import argparse
+import json
 import logging
 import sys
 from pathlib import Path
 
 from tennisvision import config
 from tennisvision.config import DEFAULT_CONF, DEFAULT_IMGSZ, DEFAULT_MODEL
-from tennisvision.datasets.tenniset import resoudre_point
+from tennisvision.datasets.tenniset import charger_verites_tenniset, resoudre_point
+from tennisvision.eval.banc import (
+    charger_verites_amateur,
+    ecrire_rapport,
+    evaluer,
+    f1_principaux,
+)
 from tennisvision.io.video import cut_clip
 from tennisvision.models import chemin_modele, importer, registre, telecharger
 from tennisvision.pipeline import analyze
@@ -97,6 +104,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_ten_clip.add_argument("-o", "--output", type=Path, required=True, help="clip de sortie")
     _ajouter_verbose(p_ten_clip)
 
+    p_exp = sub_ten.add_parser(
+        "export-events", help="convertit la vérité TenniSet en events.json (un dossier par vidéo)"
+    )
+    _ajouter_data_dir(p_exp)
+    p_exp.add_argument(
+        "--split",
+        choices=["train", "val", "test", "all"],
+        default="all",
+        help="split exporté (défaut : all)",
+    )
+    p_exp.add_argument("-o", "--output", type=Path, required=True, help="dossier de sortie")
+    _ajouter_verbose(p_exp)
+
     p_mod = sub.add_parser("models", help="gère les modèles du registre (cache utilisateur)")
     sub_mod = p_mod.add_subparsers(dest="action", required=True)
     commun = argparse.ArgumentParser(add_help=False)
@@ -122,6 +142,27 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_val.add_argument("chemin", type=Path, help="dossier de sortie ou fichier unique")
     _ajouter_verbose(p_val)
+
+    p_eval = sub.add_parser("eval", help="évalue des prédictions contre une vérité terrain")
+    p_eval.add_argument("--dataset", choices=["tenniset", "amateur"], required=True)
+    p_eval.add_argument(
+        "--predictions", type=Path, required=True, help="dossier <match>/ des sorties du pipeline"
+    )
+    p_eval.add_argument(
+        "--split",
+        choices=["train", "val", "test", "all"],
+        default="test",
+        help="split évalué (défaut : test)",
+    )
+    _ajouter_data_dir(p_eval)
+    p_eval.add_argument("--gt-dir", type=Path, help="dossier de vérité terrain (amateur)")
+    p_eval.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("reports") / "eval",
+        help="dossier des rapports (défaut : ./reports/eval)",
+    )
+    _ajouter_verbose(p_eval)
     return parser
 
 
@@ -224,11 +265,49 @@ def _models(args: argparse.Namespace) -> None:
         print(f"{args.nom} : {importer(args.nom, args.fichier, args.models_dir)}")
 
 
+def _exporter_evenements(args: argparse.Namespace) -> None:
+    """Écrit `<sortie>/<V0xx>/events.json` pour chaque annotation TenniSet."""
+    verites = charger_verites_tenniset(config.tenniset_dir(args.data_dir), args.split)
+    for nom, verite in verites.items():
+        dossier = args.output / nom
+        dossier.mkdir(parents=True, exist_ok=True)
+        fichier = dossier / "events.json"
+        contenu = json.dumps(verite["events"], indent=2, ensure_ascii=False)
+        fichier.write_text(contenu + "\n", encoding="utf-8", newline="\n")
+        print(f"{fichier} ({len(verite['events']['events'])} événements)")
+
+
+def _evaluer(args: argparse.Namespace) -> None:
+    if not args.predictions.is_dir():
+        raise ErreurUsage(f"Dossier de prédictions introuvable : {args.predictions}")
+    if args.dataset == "amateur":
+        if args.gt_dir is None:
+            raise ErreurUsage("--gt-dir est obligatoire avec --dataset amateur")
+        if not args.gt_dir.is_dir():
+            raise ErreurUsage(f"Dossier de vérité terrain introuvable : {args.gt_dir}")
+        verites = charger_verites_amateur(args.gt_dir, args.split)
+    else:
+        verites = charger_verites_tenniset(config.tenniset_dir(args.data_dir), args.split)
+    rapport = evaluer(verites, args.predictions, dataset=args.dataset, split=args.split)
+    chemin = ecrire_rapport(rapport, args.output_dir)
+    print(f"Rapport : {chemin}")
+    print(f"Matchs évalués : {rapport['agrege']['n_matchs']}")
+    for nom, f1 in f1_principaux(rapport["agrege"]).items():
+        print(f"  F1 {nom} : {'n/a' if f1 is None else f'{f1:.3f}'}")
+    for avertissement in rapport["avertissements"]:
+        print(f"Avertissement : {avertissement}")
+
+
 def _executer(args: argparse.Namespace) -> int:
     if args.commande == "validate":
         return _valider(args)
+    if args.commande == "eval":
+        _evaluer(args)
+        return 0
     if args.commande == "models":
         _models(args)
+    elif args.commande == "tenniset" and args.action == "export-events":
+        _exporter_evenements(args)
     elif args.commande == "tenniset":
         video, debut, fin = _resoudre_point(args)
         if args.action == "analyze":
@@ -245,8 +324,10 @@ def _executer(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     """Point d'entrée.
 
-    Codes retour : 0 succès (pour `validate` : tous les fichiers présents sont valides), 1 au
-    moins un fichier invalide (`validate`), 2 erreur d'argument ou de fichier (chemin introuvable,
+    Codes retour : 0 succès (pour `validate` : tous les fichiers présents sont valides ; pour
+    `eval` : rapport écrit, quels que soient les scores), 1 au moins un fichier invalide
+    (`validate`), 2 erreur d'argument ou de fichier (chemin introuvable, `--gt-dir` manquant ou
+    split absent de `splits.json` (`eval`), aucune annotation TenniSet,
     bornes ou `match.json` invalides, point TenniSet inconnu, modèle absent du cache — le message
     indique `models pull` —, téléchargement ou import de modèle en échec, dossier sans fichier de
     contrat…).

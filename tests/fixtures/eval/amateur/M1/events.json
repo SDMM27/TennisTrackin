@@ -1,0 +1,152 @@
+{
+  "schema_version": "1.0",
+  "video": "m1.mp4",
+  "events": [
+    {
+      "id": "point_1",
+      "type": "point",
+      "t_ms": 0.0,
+      "frame_idx": 0,
+      "end_t_ms": 2400.0,
+      "end_frame_idx": 60,
+      "winner_id": "P1",
+      "server_id": "P1",
+      "end_reason": "winner",
+      "rally_length": 4,
+      "score_after": {
+        "sets": [],
+        "games": [
+          0,
+          0
+        ],
+        "points": [
+          "15",
+          "0"
+        ]
+      },
+      "confidence": null,
+      "source": "annotation"
+    },
+    {
+      "id": "game_1",
+      "type": "game",
+      "t_ms": 0.0,
+      "frame_idx": 0,
+      "end_t_ms": 4800.0,
+      "end_frame_idx": 120,
+      "winner_id": "P1",
+      "server_id": "P1",
+      "score_after": {
+        "sets": [],
+        "games": [
+          1,
+          0
+        ],
+        "points": [
+          "0",
+          "0"
+        ]
+      },
+      "confidence": null,
+      "source": "annotation"
+    },
+    {
+      "id": "serve_1",
+      "type": "serve",
+      "t_ms": 200.0,
+      "frame_idx": 5,
+      "player_id": "P1",
+      "serve_number": 1,
+      "result": "in",
+      "confidence": null,
+      "source": "annotation"
+    },
+    {
+      "id": "hit_1",
+      "type": "hit",
+      "t_ms": 200.0,
+      "frame_idx": 5,
+      "player_id": "P1",
+      "stroke": "serve",
+      "spin": "flat",
+      "outcome": "in_play",
+      "confidence": null,
+      "source": "annotation"
+    },
+    {
+      "id": "bounce_1",
+      "type": "bounce",
+      "t_ms": 480.0,
+      "frame_idx": 12,
+      "court_xy": [
+        1.0,
+        -6.3
+      ],
+      "in_out": "in",
+      "confidence": null,
+      "source": "annotation"
+    },
+    {
+      "id": "hit_2",
+      "type": "hit",
+      "t_ms": 800.0,
+      "frame_idx": 20,
+      "player_id": "P2",
+      "stroke": "forehand",
+      "spin": "topspin",
+      "outcome": "in_play",
+      "confidence": null,
+      "source": "annotation"
+    },
+    {
+      "id": "bounce_2",
+      "type": "bounce",
+      "t_ms": 1120.0,
+      "frame_idx": 28,
+      "court_xy": [
+        2.0,
+        4.0
+      ],
+      "in_out": "in",
+      "confidence": null,
+      "source": "annotation"
+    },
+    {
+      "id": "hit_3",
+      "type": "hit",
+      "t_ms": 1440.0,
+      "frame_idx": 36,
+      "player_id": "P1",
+      "stroke": "backhand",
+      "spin": "slice",
+      "outcome": "in_play",
+      "confidence": null,
+      "source": "annotation"
+    },
+    {
+      "id": "bounce_3",
+      "type": "bounce",
+      "t_ms": 1760.0,
+      "frame_idx": 44,
+      "court_xy": [
+        -4.0,
+        10.0
+      ],
+      "in_out": "in",
+      "confidence": null,
+      "source": "annotation"
+    },
+    {
+      "id": "hit_4",
+      "type": "hit",
+      "t_ms": 2080.0,
+      "frame_idx": 52,
+      "player_id": "P2",
+      "stroke": "smash",
+      "spin": null,
+      "outcome": "winner",
+      "confidence": null,
+      "source": "annotation"
+    }
+  ]
+}
