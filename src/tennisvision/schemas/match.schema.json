@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tennisvision:schemas/match.schema.json",
+  "title": "match.json",
+  "description": "Métadonnées d'un match : joueurs, format, surface, caméra. Saisi par l'utilisateur.",
+  "type": "object",
+  "required": ["schema_version", "players", "first_server", "format"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "players": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "handedness"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"$ref": "#/$defs/player_id"},
+          "name": {"type": "string"},
+          "handedness": {"enum": ["right", "left", "unknown"]}
+        }
+      }
+    },
+    "first_server": {"$ref": "#/$defs/player_id"},
+    "format": {
+      "type": "object",
+      "required": ["sets_to_win"],
+      "additionalProperties": false,
+      "properties": {
+        "sets_to_win": {"type": "integer", "minimum": 1, "maximum": 3},
+        "games_per_set": {"type": "integer", "minimum": 1, "default": 6},
+        "tiebreak_at": {
+          "description": "Score de jeux (n-n) déclenchant le jeu décisif ; null = pas de jeu décisif.",
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "default": 6
+        },
+        "final_set": {"enum": ["tiebreak", "super_tiebreak", "advantage"], "default": "tiebreak"},
+        "deciding_point": {
+          "description": "true = point décisif à 40-40 (sans avantage).",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "surface": {"enum": ["clay", "hard", "grass", "indoor_hard", "carpet", "other", "unknown"]},
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fps_nominal": {"type": "number", "exclusiveMinimum": 0},
+        "position": {"enum": ["behind_baseline", "side", "other"]},
+        "height_m": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "court_corners": {
+      "description": "Repli manuel de calibration (Lot 5) : 4 coins placés par l'utilisateur, en pixels, dans l'ordre loin-gauche, loin-droite, près-droite, près-gauche.",
+      "type": "object",
+      "required": ["kind", "px"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {"enum": ["singles", "doubles"]},
+        "px": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"$ref": "#/$defs/point2"}}
+      }
+    }
+  },
+  "$defs": {
+    "player_id": {"type": "string", "pattern": "^P[12]$"},
+    "point2": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}}
+  }
+}

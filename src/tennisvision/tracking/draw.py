@@ -1,7 +1,5 @@
 """Annotation des frames : joueurs, balle, traînée et bandeau d'information."""
 
-import itertools
-from collections import deque
 from collections.abc import Iterable
 
 import cv2
@@ -15,17 +13,80 @@ NOIR = (0, 0, 0)
 BLANC = (255, 255, 255)
 
 
+class BallTrail:
+    """Traînée de la balle : points récents, regroupés en segments sans trou trop long.
+
+    Un point est oublié quand son âge (frame courante - frame du point) dépasse `max_age` ;
+    deux points consécutifs ne sont reliés que si leurs frames sont séparées d'au plus `max_gap`.
+
+    La sélection « balle la plus confiante » faite par l'appelant est provisoire
+    (constat C3, Lot 4).
+    """
+
+    def __init__(self, max_age: int = 15, max_gap: int = 5) -> None:
+        self.max_age = max_age
+        self.max_gap = max_gap
+        self._points: list[tuple[int, tuple[int, int]]] = []
+        self._frame_idx: int | None = None
+
+    def update(self, frame_idx: int, position: tuple[float, float] | None) -> None:
+        """Enregistre la position de la balle à cette frame (None si absente) et purge."""
+        self._frame_idx = frame_idx
+        if position is not None:
+            self._points.append((frame_idx, (int(position[0]), int(position[1]))))
+        self._points = [(f, p) for f, p in self._points if frame_idx - f <= self.max_age]
+
+    def segments(self) -> list[list[tuple[int, int]]]:
+        """Points regroupés en segments (un nouveau segment démarre après un trou > `max_gap`)."""
+        segments: list[list[tuple[int, int]]] = []
+        precedente: int | None = None
+        for frame, point in self._points:
+            if precedente is None or frame - precedente > self.max_gap:
+                segments.append([])
+            segments[-1].append(point)
+            precedente = frame
+        return segments
+
+    def current(self) -> tuple[int, int] | None:
+        """Position à la frame courante, None si la balle n'y est pas."""
+        if self._points and self._points[-1][0] == self._frame_idx:
+            return self._points[-1][1]
+        return None
+
+
+def _texte_bandeau(frame_idx: int, t_ms: float | None = None) -> str:
+    """Texte du bandeau : `Frame {idx}  mm:ss.d` si le temps est connu, sinon `Frame {idx}`."""
+    if t_ms is None:
+        return f"Frame {frame_idx}"
+    dixiemes = int(max(t_ms, 0.0) // 100)
+    minutes, reste = divmod(dixiemes, 600)
+    return f"Frame {frame_idx}  {minutes:02d}:{reste // 10:02d}.{reste % 10}"
+
+
+def _dessiner_trainee(
+    out: np.ndarray,
+    segments: list[list[tuple[int, int]]],
+    courant: tuple[int, int] | None,
+) -> None:
+    for segment in segments:
+        if len(segment) > 1:
+            cv2.polylines(out, [np.array(segment, dtype=np.int32)], False, JAUNE, 2, cv2.LINE_AA)
+    if courant is not None:
+        cv2.circle(out, courant, 6, JAUNE, -1, cv2.LINE_AA)
+        cv2.circle(out, courant, 8, NOIR, 1, cv2.LINE_AA)
+
+
 def draw_frame(
     frame: np.ndarray,
     detections: Iterable[Detection],
-    ball_trail: deque[tuple[int, int]],
-    frame_idx: int | None = None,
-    fps: float = 25.0,
+    trail: BallTrail,
+    frame_idx: int,
+    t_ms: float | None = None,
 ) -> np.ndarray:
     """Retourne une copie annotée de `frame`.
 
-    `ball_trail` est une deque (maxlen = longueur de traînée) tenue par l'appelant :
-    la position de la balle de cette frame y est ajoutée.
+    `trail` est une `BallTrail` tenue par l'appelant et déjà mise à jour pour cette frame.
+    Le bandeau affiche l'indice de frame et, si `t_ms` est donné, le temps réel.
     """
     out = frame.copy()
     detections = list(detections)
@@ -47,22 +108,10 @@ def draw_frame(
             cv2.LINE_AA,
         )
 
-    balles = [d for d in detections if d.label == "ball"]
-    if balles:
-        meilleure = max(balles, key=lambda d: d.conf)
-        ball_trail.append((int(meilleure.cx), int(meilleure.cy)))
+    _dessiner_trainee(out, trail.segments(), trail.current())
 
-    points = list(ball_trail)
-    for a, b in itertools.pairwise(points):
-        cv2.line(out, a, b, JAUNE, 2, cv2.LINE_AA)
-    if balles:
-        cv2.circle(out, points[-1], 6, JAUNE, -1, cv2.LINE_AA)
-        cv2.circle(out, points[-1], 8, NOIR, 1, cv2.LINE_AA)
-
-    if frame_idx is not None:
-        secondes = int(frame_idx / fps) if fps else 0
-        texte = f"Frame {frame_idx}  {secondes // 60:02d}:{secondes % 60:02d}"
-        (w, h), base = cv2.getTextSize(texte, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
-        cv2.rectangle(out, (0, 0), (w + 16, h + base + 12), NOIR, -1)
-        cv2.putText(out, texte, (8, h + 6), cv2.FONT_HERSHEY_SIMPLEX, 0.6, BLANC, 1, cv2.LINE_AA)
+    texte = _texte_bandeau(frame_idx, t_ms)
+    (w, h), base = cv2.getTextSize(texte, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+    cv2.rectangle(out, (0, 0), (w + 16, h + base + 12), NOIR, -1)
+    cv2.putText(out, texte, (8, h + 6), cv2.FONT_HERSHEY_SIMPLEX, 0.6, BLANC, 1, cv2.LINE_AA)
     return out

@@ -10,8 +10,8 @@ from tennisvision.config import (
     DEFAULT_TRACKER,
     PERSON,
     SPORTS_BALL,
-    default_model_path,
 )
+from tennisvision.models import resoudre_modele
 
 LABELS = {PERSON: "person", SPORTS_BALL: "ball"}
 
@@ -54,7 +54,7 @@ class Tracker:
     ) -> None:
         from ultralytics import YOLO  # import tardif : lourd
 
-        self.model = YOLO(model_path or default_model_path())
+        self.model = YOLO(str(resoudre_modele(model_path)))
         self.conf = conf
         self.imgsz = imgsz
         self.tracker = tracker

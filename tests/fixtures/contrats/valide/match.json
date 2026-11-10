@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "players": [
+    {
+      "id": "P1",
+      "name": "Alice",
+      "handedness": "right"
+    },
+    {
+      "id": "P2",
+      "name": "Bastien",
+      "handedness": "left"
+    }
+  ],
+  "first_server": "P1",
+  "format": {
+    "sets_to_win": 2,
+    "games_per_set": 6,
+    "tiebreak_at": 6,
+    "final_set": "tiebreak",
+    "deciding_point": false
+  },
+  "surface": "clay",
+  "camera": {
+    "fps_nominal": 30,
+    "position": "behind_baseline",
+    "height_m": 4.5
+  }
+}

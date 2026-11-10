@@ -1,0 +1,153 @@
+{
+  "schema_version": "1.0",
+  "video": "match_demo.mp4",
+  "events": [
+    {
+      "id": "e1",
+      "type": "point",
+      "t_ms": 0,
+      "frame_idx": 0,
+      "end_t_ms": 301,
+      "end_frame_idx": 9,
+      "winner_id": "P2",
+      "server_id": "P1",
+      "score_after": {
+        "sets": [
+          [
+            6,
+            3
+          ]
+        ],
+        "games": [
+          2,
+          5
+        ],
+        "points": [
+          "0",
+          "0"
+        ]
+      },
+      "end_reason": "error_net",
+      "rally_length": 2,
+      "confidence": 0.8,
+      "source": "auto"
+    },
+    {
+      "id": "e2",
+      "type": "game",
+      "t_ms": 0,
+      "frame_idx": 0,
+      "end_t_ms": 301,
+      "end_frame_idx": 9,
+      "winner_id": "P2",
+      "server_id": "P1",
+      "score_after": {
+        "sets": [
+          [
+            6,
+            3
+          ]
+        ],
+        "games": [
+          2,
+          5
+        ],
+        "points": [
+          "0",
+          "0"
+        ]
+      },
+      "confidence": 0.8,
+      "source": "auto"
+    },
+    {
+      "id": "e3",
+      "type": "serve",
+      "t_ms": 0,
+      "frame_idx": 0,
+      "player_id": "P1",
+      "serve_number": 1,
+      "result": "fault",
+      "fault_type": "net",
+      "confidence": 0.7,
+      "source": "auto"
+    },
+    {
+      "id": "e4",
+      "type": "hit",
+      "t_ms": 60,
+      "frame_idx": 2,
+      "player_id": "P1",
+      "stroke": "serve",
+      "spin": "flat",
+      "outcome": "in_play",
+      "confidence": 0.85,
+      "source": "auto"
+    },
+    {
+      "id": "e5",
+      "type": "serve",
+      "t_ms": 67,
+      "frame_idx": 2,
+      "player_id": "P1",
+      "serve_number": 2,
+      "result": "in",
+      "hit_id": "e4",
+      "confidence": 0.82,
+      "source": "auto"
+    },
+    {
+      "id": "e6",
+      "type": "hit",
+      "t_ms": 134,
+      "frame_idx": 4,
+      "player_id": "P2",
+      "stroke": "forehand",
+      "spin": "topspin",
+      "outcome": "in_play",
+      "confidence": 0.9,
+      "source": "auto"
+    },
+    {
+      "id": "e7",
+      "type": "bounce",
+      "t_ms": 201,
+      "frame_idx": 6,
+      "court_xy": [
+        -1.2,
+        8.9
+      ],
+      "image_xy": [
+        905.4,
+        820.1
+      ],
+      "uncertainty_cm": 35,
+      "in_out": "in",
+      "zone": "deep",
+      "hit_id": "e6",
+      "confidence": 0.75,
+      "source": "auto"
+    },
+    {
+      "id": "e8",
+      "type": "hit",
+      "t_ms": 234,
+      "frame_idx": 7,
+      "player_id": "P1",
+      "stroke": "backhand",
+      "spin": "slice",
+      "outcome": "forced_error",
+      "confidence": 0.8,
+      "source": "auto"
+    },
+    {
+      "id": "e9",
+      "type": "net",
+      "t_ms": 267,
+      "frame_idx": 8,
+      "hit_id": "e8",
+      "confidence": 0.6,
+      "source": "auto"
+    }
+  ]
+}

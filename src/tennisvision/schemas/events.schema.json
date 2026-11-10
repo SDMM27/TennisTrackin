@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tennisvision:schemas/events.schema.json",
+  "title": "events.json",
+  "description": "Événements typés d'un match (prédits ou vérité terrain : même format). Compatible TenniSet (Point/Serve/Hit/Game/Set), étendu de bounce et net.",
+  "type": "object",
+  "required": ["schema_version", "events"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "video": {"description": "Nom du fichier vidéo (sans chemin).", "type": "string"},
+    "events": {"type": "array", "items": {"$ref": "#/$defs/event"}}
+  },
+  "$defs": {
+    "player_id": {"type": "string", "pattern": "^P[12]$"},
+    "score": {
+      "description": "Score après l'événement. points : '0','15','30','40','AD', ou entiers en texte pendant un jeu décisif.",
+      "type": "object",
+      "required": ["sets", "games", "points"],
+      "additionalProperties": false,
+      "properties": {
+        "sets": {
+          "description": "Jeux de chaque set terminé, [P1, P2].",
+          "type": "array",
+          "items": {"$ref": "#/$defs/pair_int"}
+        },
+        "games": {"$ref": "#/$defs/pair_int"},
+        "points": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {"type": "string", "pattern": "^(0|15|30|40|AD|[0-9]+)$"}
+        }
+      }
+    },
+    "pair_int": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {"type": "integer", "minimum": 0}
+    },
+    "event": {
+      "type": "object",
+      "required": ["id", "type", "t_ms", "frame_idx", "source"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "type": {"enum": ["point", "serve", "hit", "bounce", "net", "game", "set"]},
+        "t_ms": {"type": "number", "minimum": 0},
+        "frame_idx": {"type": "integer", "minimum": 0},
+        "end_t_ms": {"type": "number", "minimum": 0},
+        "end_frame_idx": {"type": "integer", "minimum": 0},
+        "player_id": {"oneOf": [{"$ref": "#/$defs/player_id"}, {"type": "null"}]},
+        "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "source": {"enum": ["auto", "user", "annotation"]},
+        "desc": {"type": "string"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"type": {"const": "serve"}}},
+          "then": {
+            "required": ["player_id", "serve_number", "result"],
+            "properties": {
+              "player_id": {"$ref": "#/$defs/player_id"},
+              "serve_number": {"enum": [1, 2]},
+              "result": {"enum": ["in", "fault", "let"]},
+              "fault_type": {"enum": ["net", "long", "wide", "foot", "unknown"]},
+              "hit_id": {"type": "string"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"type": {"const": "hit"}}},
+          "then": {
+            "required": ["player_id"],
+            "properties": {
+              "player_id": {"$ref": "#/$defs/player_id"},
+              "stroke": {
+                "enum": [
+                  "serve",
+                  "forehand",
+                  "backhand",
+                  "forehand_volley",
+                  "backhand_volley",
+                  "smash",
+                  "uncertain",
+                  null
+                ]
+              },
+              "spin": {"enum": ["topspin", "slice", "flat", "unknown", null]},
+              "outcome": {
+                "enum": ["in_play", "winner", "unforced_error", "forced_error", "unknown", null]
+              }
+            }
+          }
+        },
+        {
+          "if": {"properties": {"type": {"const": "bounce"}}},
+          "then": {
+            "required": ["court_xy", "in_out"],
+            "properties": {
+              "court_xy": {
+                "description": "Position au sol en mètres (repère de docs/contracts.md).",
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {"type": "number"}
+              },
+              "image_xy": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {"type": "number"}
+              },
+              "uncertainty_cm": {"type": "number", "minimum": 0},
+              "in_out": {"enum": ["in", "out", "too_close"]},
+              "zone": {"type": "string"},
+              "hit_id": {"type": "string"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"type": {"const": "net"}}},
+          "then": {"properties": {"hit_id": {"type": "string"}}}
+        },
+        {
+          "if": {"properties": {"type": {"enum": ["point", "game", "set"]}}},
+          "then": {
+            "required": ["end_t_ms", "end_frame_idx", "winner_id"],
+            "properties": {
+              "winner_id": {"oneOf": [{"$ref": "#/$defs/player_id"}, {"type": "null"}]},
+              "server_id": {"$ref": "#/$defs/player_id"},
+              "score_after": {"$ref": "#/$defs/score"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"type": {"const": "point"}}},
+          "then": {
+            "properties": {
+              "end_reason": {
+                "enum": [
+                  "ace",
+                  "double_fault",
+                  "winner",
+                  "error_net",
+                  "error_long",
+                  "error_wide",
+                  "double_bounce",
+                  "unknown"
+                ]
+              },
+              "rally_length": {"type": "integer", "minimum": 0}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

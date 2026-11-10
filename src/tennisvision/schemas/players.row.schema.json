@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tennisvision:schemas/players.row.schema.json",
+  "title": "players.csv (une ligne)",
+  "description": "Les 2 joueurs retenus par frame (au plus une ligne par joueur et par frame). bbox en pixels (image après rotation) ; foot_*_m = pieds projetés sur le court en mètres (null sans calibration) ; kp{i}_x/y/c = 17 points clés COCO (pixels, confiance), vides sans pose. Cellule vide = null.",
+  "x-format": "csv",
+  "x-columns": [
+    "frame_idx",
+    "t_ms",
+    "player_id",
+    "track_id",
+    "bbox_x1",
+    "bbox_y1",
+    "bbox_x2",
+    "bbox_y2",
+    "foot_x_m",
+    "foot_y_m",
+    "confidence",
+    "kp0_x",
+    "kp0_y",
+    "kp0_c",
+    "kp1_x",
+    "kp1_y",
+    "kp1_c",
+    "kp2_x",
+    "kp2_y",
+    "kp2_c",
+    "kp3_x",
+    "kp3_y",
+    "kp3_c",
+    "kp4_x",
+    "kp4_y",
+    "kp4_c",
+    "kp5_x",
+    "kp5_y",
+    "kp5_c",
+    "kp6_x",
+    "kp6_y",
+    "kp6_c",
+    "kp7_x",
+    "kp7_y",
+    "kp7_c",
+    "kp8_x",
+    "kp8_y",
+    "kp8_c",
+    "kp9_x",
+    "kp9_y",
+    "kp9_c",
+    "kp10_x",
+    "kp10_y",
+    "kp10_c",
+    "kp11_x",
+    "kp11_y",
+    "kp11_c",
+    "kp12_x",
+    "kp12_y",
+    "kp12_c",
+    "kp13_x",
+    "kp13_y",
+    "kp13_c",
+    "kp14_x",
+    "kp14_y",
+    "kp14_c",
+    "kp15_x",
+    "kp15_y",
+    "kp15_c",
+    "kp16_x",
+    "kp16_y",
+    "kp16_c"
+  ],
+  "type": "object",
+  "required": [
+    "frame_idx",
+    "t_ms",
+    "player_id",
+    "track_id",
+    "bbox_x1",
+    "bbox_y1",
+    "bbox_x2",
+    "bbox_y2"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "frame_idx": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "t_ms": {
+      "type": "number",
+      "minimum": 0
+    },
+    "player_id": {
+      "type": "string",
+      "pattern": "^P[12]$"
+    },
+    "track_id": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "bbox_x1": {
+      "type": "number"
+    },
+    "bbox_y1": {
+      "type": "number"
+    },
+    "bbox_x2": {
+      "type": "number"
+    },
+    "bbox_y2": {
+      "type": "number"
+    },
+    "foot_x_m": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "foot_y_m": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "confidence": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "patternProperties": {
+    "^kp([0-9]|1[0-6])_[xy]$": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "^kp([0-9]|1[0-6])_c$": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1
+    }
+  }
+}

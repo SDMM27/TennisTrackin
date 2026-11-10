@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tennisvision:schemas/court.schema.json",
+  "title": "court.json",
+  "description": "Calibration image -> court. Plusieurs segments si la caméra bouge (dérive). Coordonnées court en mètres, origine au centre du filet (voir docs/contracts.md).",
+  "type": "object",
+  "required": ["schema_version", "image_size", "segments"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "image_size": {
+      "description": "[largeur, hauteur] en pixels, après application de la rotation.",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {"type": "integer", "minimum": 1}
+    },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "valid_from_frame",
+          "valid_to_frame",
+          "homography",
+          "keypoints_px",
+          "reprojection_error_px",
+          "source"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "valid_from_frame": {"type": "integer", "minimum": 0},
+          "valid_to_frame": {
+            "description": "Frame de fin incluse ; null = jusqu'à la fin de la vidéo.",
+            "type": ["integer", "null"],
+            "minimum": 0
+          },
+          "homography": {
+            "description": "Matrice 3x3 image (px) -> court (m), par lignes.",
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {"type": "number"}
+            }
+          },
+          "keypoints_px": {
+            "description": "Les 14 points clés dans l'ordre de docs/contracts.md ; null si hors image.",
+            "type": "array",
+            "minItems": 14,
+            "maxItems": 14,
+            "items": {
+              "oneOf": [
+                {"type": "null"},
+                {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}}
+              ]
+            }
+          },
+          "reprojection_error_px": {"type": "number", "minimum": 0},
+          "reprojection_error_cm": {"type": "number", "minimum": 0},
+          "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+          "source": {"enum": ["auto", "user", "annotation"]}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tennisvision:schemas/ball.row.schema.json",
+  "title": "ball.csv (une ligne)",
+  "description": "Position 2D de la balle par frame, en pixels de l'image après rotation. Cellule vide = null. Contrainte de table : frame_idx strictement croissant.",
+  "x-format": "csv",
+  "x-columns": ["frame_idx", "t_ms", "x", "y", "visible", "score", "source"],
+  "type": "object",
+  "required": ["frame_idx", "t_ms", "x", "y", "visible", "score", "source"],
+  "additionalProperties": false,
+  "properties": {
+    "frame_idx": {"type": "integer", "minimum": 0},
+    "t_ms": {"type": "number", "minimum": 0},
+    "x": {"type": ["number", "null"]},
+    "y": {"type": ["number", "null"]},
+    "visible": {"enum": [0, 1]},
+    "score": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "source": {"enum": ["detected", "interpolated", "annotation", null]}
+  },
+  "if": {"properties": {"visible": {"const": 1}}},
+  "then": {
+    "properties": {
+      "x": {"type": "number"},
+      "y": {"type": "number"},
+      "source": {"enum": ["detected", "interpolated", "annotation"]}
+    }
+  },
+  "else": {"properties": {"x": {"type": "null"}, "y": {"type": "null"}}}
+}

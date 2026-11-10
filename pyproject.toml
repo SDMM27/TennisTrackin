@@ -17,6 +17,10 @@ dependencies = [
     "matplotlib>=3.10",
     "scikit-learn>=1.9",
     "lap>=0.5",
+    "jsonschema>=4.23",
+    "pyarrow>=18",
+    "av>=14",
+    "platformdirs>=4",
 ]
 
 [project.optional-dependencies]
@@ -27,6 +31,9 @@ tennisvision = "tennisvision.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+tennisvision = ["schemas/*.json", "models.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

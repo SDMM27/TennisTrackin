@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tennisvision:schemas/frames.row.schema.json",
+  "title": "frames.parquet (une ligne)",
+  "description": "Index des frames et horodatages réels de présentation. Toutes les durées se calculent à partir de t_ms, jamais de frame_idx / fps. Contraintes de table : frame_idx = 0..n-1 contigu, t_ms strictement croissant.",
+  "x-format": "parquet",
+  "x-columns": ["frame_idx", "t_ms"],
+  "type": "object",
+  "required": ["frame_idx", "t_ms"],
+  "additionalProperties": false,
+  "properties": {
+    "frame_idx": {"type": "integer", "minimum": 0},
+    "t_ms": {"type": "number", "minimum": 0}
+  }
+}
