@@ -5,11 +5,15 @@ pour produire des statistiques : services, coups droits, revers, longueur des é
 frappe, comptage des points.
 
 Objectif : un MVP honnête **vision → événements → stats**, dont chaque étape est mesurée contre
-les annotations du dataset [TenniSet](https://github.com/HaydenFaulkner/Tennis). Pas de temps
-réel, pas de mobile, pas d'arbitrage au centimètre.
+les annotations du dataset [TenniSet](https://github.com/HaydenFaulkner/Tennis). La capture se
+fait sur téléphone (caméra fixe derrière le fond de court) ; le traitement est hors-ligne, sur
+PC ou serveur en v1 (cf. [ADR-001](docs/adr/001-perimetre-v1.md) et
+[ADR-002](docs/adr/002-traitement-serveur.md)). Pas de temps réel ni d'arbitrage au centimètre
+(cf. [ADR-006](docs/adr/006-limites-monocamera.md)).
 
 État actuel : **étape 0** (ingestion vidéo + détection/tracking joueurs et balle).
 La suite est décrite dans [ROADMAP.md](ROADMAP.md).
+Plan de référence : [docs/PLAN_AMELIORATION.md](docs/PLAN_AMELIORATION.md) ; décisions : [docs/adr/](docs/adr/).
 
 ## Installation
 

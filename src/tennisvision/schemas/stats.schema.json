@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tennisvision:schemas/stats.schema.json",
+  "title": "stats.json",
+  "description": "Statistiques calculées à partir de events.json. Chaque valeur porte son effectif, sa confiance et son statut de validation.",
+  "type": "object",
+  "required": ["schema_version", "generated_with", "stats"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "generated_with": {
+      "type": "object",
+      "required": ["tennisvision_version"],
+      "additionalProperties": false,
+      "properties": {
+        "tennisvision_version": {"type": "string"},
+        "models": {
+          "description": "Nom du modèle -> version utilisée.",
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        },
+        "eval_report": {
+          "description": "Rapport du banc d'évaluation d'où vient le drapeau validated (chemin relatif ou identifiant).",
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "stats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "player_id", "value", "unit", "n", "validated"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "Identifiant stable de la statistique, ex. first_serve_pct.",
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "player_id": {
+            "oneOf": [{"type": "string", "pattern": "^P[12]$"}, {"type": "null"}]
+          },
+          "scope": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "set": {"type": ["integer", "null"], "minimum": 1},
+              "serve_number": {"enum": [1, 2, null]}
+            }
+          },
+          "value": {"type": ["number", "null"]},
+          "unit": {"enum": ["pct", "count", "ratio", "m", "ms", "kmh"]},
+          "n": {"description": "Effectif sur lequel la valeur est calculée.", "type": "integer", "minimum": 0},
+          "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+          "validated": {"type": "boolean"},
+          "error": {
+            "description": "Erreur mesurée par le banc d'évaluation pour cette statistique.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "abs": {"type": "number", "minimum": 0},
+              "rel": {"type": "number", "minimum": 0}
+            }
+          },
+          "source_events": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

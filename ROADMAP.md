@@ -1,5 +1,10 @@
 # Feuille de route — TennisTrackin
 
+> **Note (2026-11-10)** : cette feuille de route est remplacée par le plan révisé
+> [docs/PLAN_AMELIORATION.md](docs/PLAN_AMELIORATION.md) (§ 3.6 : roadmap révisée en phases A–G,
+> lots 0–12). Elle change notamment parce que les vidéos amateurs passent de l'étape 6 au début
+> (jeu de référence, [ADR-003](docs/adr/003-jeu-amateur-reference.md)).
+
 Chaque étape produit un **livrable démontrable seul** et une **métrique chiffrée** calculée
 contre les annotations TenniSet (ou un petit jeu annoté à la main quand TenniSet ne suffit pas).
 Les évaluations vivront dans `src/tennisvision/eval/` et écriront leurs résultats dans `reports/`,

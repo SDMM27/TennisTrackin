@@ -1,5 +1,8 @@
 """Tests de la CLI (sans charger YOLO)."""
 
+import shutil
+from pathlib import Path
+
 import pytest
 
 from tennisvision import cli
@@ -108,3 +111,48 @@ def test_clip(video_synthetique, tmp_path, capsys):
 def test_clip_sans_fin(video_synthetique, tmp_path, capsys):
     code = cli.main(["clip", str(video_synthetique), "-o", str(tmp_path / "c.mp4")])
     assert code == 2
+
+
+# --- validate -------------------------------------------------------------------------------
+
+CONTRATS_VALIDE = Path(__file__).parent / "fixtures" / "contrats" / "valide"
+
+
+def test_validate_dossier_valide(capsys):
+    assert cli.main(["validate", str(CONTRATS_VALIDE)]) == 0
+    sortie = capsys.readouterr().out
+    assert "OK  events.json" in sortie and "INVALIDE" not in sortie
+
+
+def test_validate_dossier_corrompu(tmp_path, capsys):
+    cible = tmp_path / "sortie"
+    shutil.copytree(CONTRATS_VALIDE, cible)
+    (cible / "ball.csv").unlink()
+    match = (CONTRATS_VALIDE / "match.json").read_text(encoding="utf-8")
+    (cible / "match.json").write_text(match.replace("left", "ambidextre"), encoding="utf-8")
+    assert cli.main(["validate", str(cible)]) == 1
+    sortie = capsys.readouterr().out
+    assert "ABSENT  ball.csv" in sortie
+    assert "INVALIDE  match.json (1 problèmes)" in sortie
+    assert "  - players[1].handedness : " in sortie
+
+
+def test_validate_fichier_unique(capsys):
+    assert cli.main(["validate", str(CONTRATS_VALIDE / "court.json")]) == 0
+    assert capsys.readouterr().out.strip() == "OK  court.json"
+
+
+def test_validate_chemin_inexistant(tmp_path, capsys):
+    assert cli.main(["validate", str(tmp_path / "absent")]) == 2
+    assert "introuvable" in capsys.readouterr().err
+
+
+def test_validate_dossier_vide(tmp_path, capsys):
+    assert cli.main(["validate", str(tmp_path)]) == 2
+    assert "Aucun fichier de contrat" in capsys.readouterr().err
+
+
+def test_validate_nom_de_fichier_inconnu(tmp_path, capsys):
+    (tmp_path / "autre.json").write_text("{}", encoding="utf-8")
+    assert cli.main(["validate", str(tmp_path / "autre.json")]) == 2
+    assert "autre.json" in capsys.readouterr().err

@@ -1,4 +1,4 @@
-"""Interface en ligne de commande : `tennisvision analyze|clip`."""
+"""Interface en ligne de commande : `tennisvision analyze|clip|validate`."""
 
 import argparse
 import logging
@@ -9,6 +9,7 @@ from tennisvision.config import DEFAULT_CONF, DEFAULT_IMGSZ
 from tennisvision.datasets.tenniset import get_point
 from tennisvision.io.video import cut_clip
 from tennisvision.pipeline import analyze
+from tennisvision.validate import valider_dossier, valider_fichier
 
 
 class ErreurUsage(Exception):
@@ -56,6 +57,12 @@ def build_parser() -> argparse.ArgumentParser:
     _ajouter_intervalle(p_clip)
     p_clip.add_argument("-o", "--output", type=Path, required=True, help="clip de sortie (.mp4)")
     p_clip.add_argument("-v", "--verbose", action="store_true", help="logs détaillés")
+
+    p_val = sub.add_parser(
+        "validate", help="vérifie des fichiers de sortie contre les contrats de données"
+    )
+    p_val.add_argument("chemin", type=Path, help="dossier de sortie ou fichier unique")
+    p_val.add_argument("-v", "--verbose", action="store_true", help="logs détaillés")
     return parser
 
 
@@ -101,7 +108,38 @@ def _afficher_resume(resume: dict) -> None:
     print(f"  - résumé : {sorties['resume']}")
 
 
-def _executer(args: argparse.Namespace) -> None:
+def _valider(args: argparse.Namespace) -> int:
+    """Affiche le verdict par fichier ; renvoie 0 (tout valide) ou 1 (au moins un invalide)."""
+    chemin = args.chemin
+    if not chemin.exists():
+        raise ErreurUsage(f"Chemin introuvable : {chemin}")
+    if chemin.is_dir():
+        resultats = valider_dossier(chemin)
+        if all(problemes is None for problemes in resultats.values()):
+            raise ErreurUsage(f"Aucun fichier de contrat trouvé dans {chemin}")
+    else:
+        resultats = {chemin.name: valider_fichier(chemin)}
+    invalide = False
+    for nom, problemes in resultats.items():
+        if problemes is None:
+            print(f"ABSENT  {nom}")
+        elif not problemes:
+            print(f"OK  {nom}")
+        else:
+            invalide = True
+            print(f"INVALIDE  {nom} ({len(problemes)} problèmes)")
+            for pb in problemes:
+                print(
+                    f"  - {pb.emplacement} : {pb.message}"
+                    if pb.emplacement
+                    else f"  - {pb.message}"
+                )
+    return 1 if invalide else 0
+
+
+def _executer(args: argparse.Namespace) -> int:
+    if args.commande == "validate":
+        return _valider(args)
     start, end = _resoudre_intervalle(args)
     if args.commande == "analyze":
         resume = analyze(
@@ -121,10 +159,16 @@ def _executer(args: argparse.Namespace) -> None:
             raise ErreurUsage("clip nécessite --end (ou --point)")
         dst = cut_clip(args.video, args.output, start, end)
         print(f"Clip écrit : {dst}")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Point d'entrée. Codes retour : 0 succès, 2 erreur d'argument ou de fichier."""
+    """Point d'entrée.
+
+    Codes retour : 0 succès (pour `validate` : tous les fichiers présents sont valides), 1 au
+    moins un fichier invalide (`validate`), 2 erreur d'argument ou de fichier (chemin introuvable,
+    nom de fichier inconnu, dossier sans fichier de contrat…).
+    """
     try:
         args = build_parser().parse_args(argv)
     except SystemExit as exc:  # argparse : --help (0) ou erreur d'usage (2)
@@ -135,8 +179,7 @@ def main(argv: list[str] | None = None) -> int:
         format="%(asctime)s %(levelname)s %(message)s",
     )
     try:
-        _executer(args)
+        return _executer(args)
     except (ErreurUsage, FileNotFoundError, ValueError) as exc:
         print(f"Erreur : {exc}", file=sys.stderr)
         return 2
-    return 0

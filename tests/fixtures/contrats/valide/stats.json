@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "generated_with": {
+    "tennisvision_version": "0.1.0",
+    "models": {
+      "ball": "heatmap-v0"
+    },
+    "eval_report": null
+  },
+  "stats": [
+    {
+      "id": "first_serve_pct",
+      "player_id": "P1",
+      "scope": {
+        "set": 1,
+        "serve_number": 1
+      },
+      "value": 50.0,
+      "unit": "pct",
+      "n": 2,
+      "confidence": 0.8,
+      "validated": true,
+      "error": {
+        "abs": 3.0,
+        "rel": 0.06
+      },
+      "source_events": [
+        "e3",
+        "e5"
+      ]
+    },
+    {
+      "id": "avg_rally_length",
+      "player_id": null,
+      "value": 2.0,
+      "unit": "count",
+      "n": 1,
+      "confidence": null,
+      "validated": false,
+      "source_events": [
+        "e1"
+      ]
+    }
+  ]
+}

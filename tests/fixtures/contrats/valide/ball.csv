@@ -1,0 +1,6 @@
+frame_idx,t_ms,x,y,visible,score,source
+0,0,912.5,410.2,1,0.91,detected
+1,33,925.1,398.7,1,0.88,detected
+2,67,938.0,389.4,1,,interpolated
+3,100,,,0,,
+4,134,962.3,371.9,1,0.79,detected
