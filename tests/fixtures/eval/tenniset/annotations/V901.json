@@ -1,0 +1,231 @@
+{
+  "video": "data/videos/V901.mp4",
+  "classes": {
+    "Match": [
+      {
+        "name": "0001",
+        "start": 80,
+        "end": 720,
+        "desc": "",
+        "custom": {}
+      }
+    ],
+    "USE": [
+      {
+        "name": "0001",
+        "start": 80,
+        "end": 720,
+        "desc": "",
+        "custom": {}
+      }
+    ],
+    "SPLITS": [
+      {
+        "name": "0001",
+        "start": 80,
+        "end": 350,
+        "desc": "",
+        "custom": {
+          "Type": "Train"
+        }
+      },
+      {
+        "name": "0002",
+        "start": 351,
+        "end": 379,
+        "desc": "",
+        "custom": {
+          "Type": "Val"
+        }
+      },
+      {
+        "name": "0003",
+        "start": 380,
+        "end": 720,
+        "desc": "",
+        "custom": {
+          "Type": "Test"
+        }
+      }
+    ],
+    "Set": [
+      {
+        "name": "0001",
+        "start": 80,
+        "end": 650,
+        "desc": "",
+        "custom": {
+          "Near": "Alpha",
+          "Winner": "Alpha",
+          "Score": "1-0"
+        }
+      }
+    ],
+    "Game": [
+      {
+        "name": "0001",
+        "start": 90,
+        "end": 310,
+        "desc": "",
+        "custom": {
+          "Winner": "Alpha",
+          "Score": "1-0",
+          "Server": "Alpha"
+        }
+      },
+      {
+        "name": "0002",
+        "start": 390,
+        "end": 610,
+        "desc": "",
+        "custom": {
+          "Winner": "Beta",
+          "Score": "1-1",
+          "Server": "Beta"
+        }
+      }
+    ],
+    "Point": [
+      {
+        "name": "0001",
+        "start": 100.0,
+        "end": 300,
+        "desc": "Premier point.",
+        "custom": {
+          "Winner": "Alpha",
+          "Score": "15-0"
+        }
+      },
+      {
+        "name": "0002",
+        "start": 400,
+        "end": 600,
+        "desc": "",
+        "custom": {
+          "Winner": "",
+          "Score": "15-15"
+        }
+      }
+    ],
+    "Serve": [
+      {
+        "name": "0001",
+        "start": 105,
+        "end": 125,
+        "desc": "",
+        "custom": {
+          "Player": "Alpha",
+          "Result": "Fault"
+        }
+      },
+      {
+        "name": "0002",
+        "start": 150,
+        "end": 170,
+        "desc": "",
+        "custom": {
+          "Player": "Alpha",
+          "Result": "In"
+        }
+      },
+      {
+        "name": "0003",
+        "start": 405,
+        "end": 425,
+        "desc": "",
+        "custom": {
+          "Player": "Beta",
+          "Result": "Let"
+        }
+      },
+      {
+        "name": "0004",
+        "start": 440,
+        "end": 460,
+        "desc": "",
+        "custom": {
+          "Player": "Beta",
+          "Result": "In"
+        }
+      },
+      {
+        "name": "0005",
+        "start": 700,
+        "end": 715,
+        "desc": "",
+        "custom": {
+          "Player": "Alpha",
+          "Result": "In"
+        }
+      }
+    ],
+    "Hit": [
+      {
+        "name": "0001",
+        "start": 160.0,
+        "end": 170,
+        "desc": "",
+        "custom": {
+          "Player": "Beta",
+          "Type": "Topspin",
+          "Side": "Forehand"
+        }
+      },
+      {
+        "name": "0002",
+        "start": 200,
+        "end": 210,
+        "desc": "",
+        "custom": {
+          "Player": "Alpha",
+          "Type": "Slice",
+          "Side": "Backhand"
+        }
+      },
+      {
+        "name": "0003",
+        "start": 240,
+        "end": 250,
+        "desc": "",
+        "custom": {
+          "Player": "Beta",
+          "Type": "Volley",
+          "Side": "Backhand"
+        }
+      },
+      {
+        "name": "0004",
+        "start": 280,
+        "end": 290,
+        "desc": "",
+        "custom": {
+          "Player": "Alpha",
+          "Type": "Smash",
+          "Side": "Forehand"
+        }
+      },
+      {
+        "name": "0005",
+        "start": 450,
+        "end": 460,
+        "desc": "",
+        "custom": {
+          "Player": "Alpha",
+          "Type": "Topspin",
+          "Side": "Forehand"
+        }
+      },
+      {
+        "name": "0006",
+        "start": 500,
+        "end": 510,
+        "desc": "",
+        "custom": {
+          "Player": "Beta",
+          "Type": "Unsure",
+          "Side": "Backhand"
+        }
+      }
+    ]
+  }
+}

@@ -117,6 +117,22 @@ référencées par des chemins **relatifs** dans `summary.json` :
 réels, jamais de `frame_idx / fps`) et la métadonnée de rotation est appliquée. Une vidéo qui
 reste en **portrait** après rotation est refusée : filmez en paysage.
 
+## Évaluation
+
+```bash
+# Vérité TenniSet convertie en events.json (oracle : l'évaluer doit donner F1 = 1)
+tennisvision tenniset export-events --data-dir data -o sortie_oracle/
+tennisvision eval --dataset tenniset --predictions sortie_oracle/ --split test
+
+# Jeu amateur : vérité terrain <gt>/<match>/ + splits.json, prédictions <pred>/<match>/
+tennisvision eval --dataset amateur --gt-dir verite/ --predictions sorties/
+```
+
+Le rapport (`rapport.json` et `rapport.html`) est écrit dans `reports/eval/<date>_<commit>/` et
+une ligne est ajoutée à `reports/eval/historique.jsonl`. Formats, définitions exactes des métriques
+et conventions TenniSet : [docs/evaluation.md](docs/evaluation.md). Les scores TenniSet sont
+optimistes (cf. [ADR-003](docs/adr/003-jeu-amateur-reference.md)).
+
 ## Structure
 
 ```
@@ -127,13 +143,14 @@ src/tennisvision/
 ├── pipeline.py       enchaînement des étapes
 ├── validate.py       validation des fichiers contre les contrats de données
 ├── schemas/          schémas JSON des contrats (cf. docs/contracts.md)
+├── eval/             banc d'évaluation : appariement, métriques, indicateurs, rapport
 ├── io/video.py       ingestion : horodatages, lecture, découpe, écriture H.264
 ├── tracking/         détection YOLO + ByteTrack, dessin, export
-└── datasets/         chargeurs des annotations TenniSet
+└── datasets/         chargeurs des annotations TenniSet (points, événements)
 notebooks/            explorations (`archive/` : notebook du palier 1)
 tests/                tests unitaires (vidéos synthétiques, faux tracker, pas de modèle)
 models/               notes sur les poids (non versionnés)
-reports/              réservé aux rapports d'évaluation futurs (non versionnés)
+reports/              rapports d'évaluation (non versionnés)
 ```
 
 ## Tests
