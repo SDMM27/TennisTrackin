@@ -19,6 +19,8 @@ dependencies = [
     "lap>=0.5",
     "jsonschema>=4.23",
     "pyarrow>=18",
+    "av>=14",
+    "platformdirs>=4",
 ]
 
 [project.optional-dependencies]
@@ -31,7 +33,7 @@ tennisvision = "tennisvision.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-tennisvision = ["schemas/*.json"]
+tennisvision = ["schemas/*.json", "models.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

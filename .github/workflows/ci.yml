@@ -1,0 +1,112 @@
+# CI tennisvision (Lot 1) : vérifie les critères « CI verte sur 3 OS » (Linux, Windows, macOS, Python 3.12 à 3.14)
+# et « le paquet marche depuis un autre dossier que le dépôt » (installation normale, CLI et import hors sources).
+# Les tests qui demandent les vidéos TenniSet ou ffmpeg sont ignorés (skip) quand ces ressources manquent.
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - "lot*"
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Installer ruff
+        run: pip install ruff
+
+      - name: Vérifier le style et les erreurs statiques
+        run: ruff check src tests
+
+  tests:
+    name: Tests (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.12", "3.13", "3.14"]
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      # ffmpeg sert aux tests de rotation vidéo (sinon ces tests sont ignorés)
+      - name: Installer ffmpeg (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Installer ffmpeg (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ffmpeg
+
+      - name: Installer ffmpeg (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ffmpeg -y --no-progress
+
+      # Version CPU de torch pour ne pas télécharger CUDA (pas d'index CPU dédié sous macOS)
+      - name: Installer torch CPU (Linux et Windows)
+        if: runner.os != 'macOS'
+        run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Installer torch (macOS)
+        if: runner.os == 'macOS'
+        run: pip install torch torchvision
+
+      # Installation normale (pas éditable) : on teste le paquet installé
+      - name: Installer tennisvision avec les extras dev
+        run: pip install ".[dev]"
+
+      - name: Lancer les tests
+        run: pytest -q
+
+      # Vérifie que le paquet fonctionne hors du dépôt, avec le paquet installé et non les sources
+      - name: Paquet utilisable hors du dépôt
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP"
+          tennisvision --help
+          tennisvision models list
+          tennisvision validate "$GITHUB_WORKSPACE/tests/fixtures/contrats/valide"
+          python -c "import tennisvision, pathlib; p = pathlib.Path(tennisvision.__file__).resolve(); assert 'site-packages' in p.parts or 'Lib' in p.parts, p"
+
+      # Critère du Lot 1 : `tennisvision analyze video.mp4` marche depuis un autre dossier
+      - name: Analyse de bout en bout hors du dépôt
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP"
+          python -c "
+          import numpy as np
+          from tennisvision.io.video import VideoWriter
+          with VideoWriter('clip.mp4', (320, 240)) as w:
+              for i in range(20):
+                  w.write(np.full((240, 320, 3), 10 * i, np.uint8), i * 33.4)
+          "
+          tennisvision models pull
+          tennisvision analyze clip.mp4 --output-dir sortie --device cpu
+          tennisvision validate sortie
