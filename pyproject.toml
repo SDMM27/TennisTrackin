@@ -34,7 +34,7 @@ tennisvision = "tennisvision.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-tennisvision = ["schemas/*.json", "models.toml"]
+tennisvision = ["schemas/*.json", "annotation/*.json", "models.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<annotations>
+  <version>1.1</version>
+  <meta>
+    <task>
+      <id>1</id>
+      <name>M1</name>
+      <size>40</size>
+      <mode>interpolation</mode>
+      <original_size>
+        <width>1280</width>
+        <height>720</height>
+      </original_size>
+    </task>
+  </meta>
+  <track id="0" label="balle" source="manual">
+    <points frame="2" keyframe="1" outside="0" occluded="0" points="100.00,200.00" z_order="0">
+      <attribute name="visible">true</attribute>
+    </points>
+    <points frame="3" keyframe="0" outside="0" occluded="0" points="110.00,210.00" z_order="0">
+      <attribute name="visible">true</attribute>
+    </points>
+    <points frame="4" keyframe="1" outside="0" occluded="0" points="120.00,220.00" z_order="0">
+      <attribute name="visible">true</attribute>
+    </points>
+    <points frame="5" keyframe="1" outside="1" occluded="0" points="120.00,220.00" z_order="0">
+      <attribute name="visible">true</attribute>
+    </points>
+    <points frame="8" keyframe="1" outside="0" occluded="0" points="200.00,100.00" z_order="0">
+      <attribute name="visible">true</attribute>
+    </points>
+    <points frame="10" keyframe="1" outside="0" occluded="0" points="220.00,120.00" z_order="0">
+      <attribute name="visible">false</attribute>
+    </points>
+    <points frame="12" keyframe="1" outside="1" occluded="0" points="220.00,120.00" z_order="0">
+      <attribute name="visible">false</attribute>
+    </points>
+  </track>
+  <track id="1" label="court" source="manual">
+    <points frame="4" keyframe="1" outside="0" occluded="0" points="400.00,200.00" z_order="0">
+      <attribute name="kp">0</attribute>
+    </points>
+    <points frame="20" keyframe="1" outside="0" occluded="0" points="410.00,200.00" z_order="0">
+      <attribute name="kp">0</attribute>
+    </points>
+    <points frame="21" keyframe="1" outside="1" occluded="0" points="410.00,200.00" z_order="0">
+      <attribute name="kp">0</attribute>
+    </points>
+  </track>
+  <track id="2" label="court" source="manual">
+    <points frame="4" keyframe="1" outside="0" occluded="0" points="880.00,200.00" z_order="0">
+      <attribute name="kp">1</attribute>
+    </points>
+    <points frame="20" keyframe="1" outside="0" occluded="0" points="890.00,200.00" z_order="0">
+      <attribute name="kp">1</attribute>
+    </points>
+  </track>
+  <track id="3" label="court" source="manual">
+    <points frame="4" keyframe="1" outside="0" occluded="0" points="150.00,650.00" z_order="0">
+      <attribute name="kp">2</attribute>
+    </points>
+    <points frame="20" keyframe="1" outside="0" occluded="0" points="160.00,650.00" z_order="0">
+      <attribute name="kp">2</attribute>
+    </points>
+  </track>
+  <track id="4" label="court" source="manual">
+    <points frame="4" keyframe="1" outside="0" occluded="0" points="1130.00,650.00" z_order="0">
+      <attribute name="kp">3</attribute>
+    </points>
+    <points frame="20" keyframe="1" outside="0" occluded="0" points="1140.00,650.00" z_order="0">
+      <attribute name="kp">3</attribute>
+    </points>
+  </track>
+  <track id="5" label="rebond" source="manual">
+    <points frame="2" keyframe="1" outside="0" occluded="0" points="300.00,300.00" z_order="0">
+      <attribute name="in_out">in</attribute>
+    </points>
+    <points frame="3" keyframe="1" outside="1" occluded="0" points="300.00,300.00" z_order="0">
+      <attribute name="in_out">in</attribute>
+    </points>
+  </track>
+  <track id="6" label="rebond" source="manual">
+    <points frame="15" keyframe="1" outside="0" occluded="0" points="640.00,400.00" z_order="0">
+      <attribute name="in_out">out</attribute>
+    </points>
+    <points frame="16" keyframe="1" outside="1" occluded="0" points="640.00,400.00" z_order="0">
+      <attribute name="in_out">out</attribute>
+    </points>
+  </track>
+  <tag frame="6" label="frappe" source="manual">
+    <attribute name="joueur">P1</attribute>
+    <attribute name="coup">serve</attribute>
+    <attribute name="issue">in_play</attribute>
+  </tag>
+  <tag frame="10" label="frappe" source="manual">
+    <attribute name="joueur">P2</attribute>
+    <attribute name="coup">forehand</attribute>
+    <attribute name="issue">winner</attribute>
+  </tag>
+  <tag frame="14" label="frappe" source="manual">
+    <attribute name="joueur">P1</attribute>
+    <attribute name="coup">backhand</attribute>
+    <attribute name="issue">unforced_error</attribute>
+  </tag>
+  <tag frame="6" label="service" source="manual">
+    <attribute name="numero">1</attribute>
+    <attribute name="resultat">in</attribute>
+    <attribute name="faute">net</attribute>
+    <attribute name="serveur">P1</attribute>
+  </tag>
+  <tag frame="30" label="service" source="manual">
+    <attribute name="numero">2</attribute>
+    <attribute name="resultat">fault</attribute>
+    <attribute name="faute">net</attribute>
+    <attribute name="serveur">P2</attribute>
+  </tag>
+  <tag frame="12" label="filet" source="manual"/>
+  <tag frame="1" label="fin_point" source="manual">
+    <attribute name="gagnant">P1</attribute>
+    <attribute name="serveur">P1</attribute>
+    <attribute name="raison"></attribute>
+  </tag>
+  <tag frame="5" label="debut_point" source="manual"/>
+  <tag frame="16" label="fin_point" source="manual">
+    <attribute name="gagnant">P2</attribute>
+    <attribute name="serveur">P1</attribute>
+    <attribute name="raison">double rebond</attribute>
+  </tag>
+  <tag frame="20" label="debut_point" source="manual"/>
+  <tag frame="25" label="debut_point" source="manual"/>
+  <tag frame="38" label="fin_point" source="manual">
+    <attribute name="gagnant">P1</attribute>
+    <attribute name="serveur">P2</attribute>
+    <attribute name="raison"></attribute>
+  </tag>
+  <tag frame="38" label="score" source="manual">
+    <attribute name="jeux">1-0</attribute>
+    <attribute name="sets"></attribute>
+  </tag>
+</annotations>

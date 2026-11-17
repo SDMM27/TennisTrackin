@@ -133,6 +133,32 @@ une ligne est ajoutée à `reports/eval/historique.jsonl`. Formats, définitions
 et conventions TenniSet : [docs/evaluation.md](docs/evaluation.md). Les scores TenniSet sont
 optimistes (cf. [ADR-003](docs/adr/003-jeu-amateur-reference.md)).
 
+## Jeu amateur
+
+Vérité terrain représentative des utilisateurs (matchs filmés au téléphone, annotés dans
+[CVAT](https://www.cvat.ai)), qui fait foi pour les statistiques
+([ADR-003](docs/adr/003-jeu-amateur-reference.md)). Le jeu lui-même n'est **jamais versionné**
+(données personnelles, consentements requis) ; ne le sont que les modèles et les guides :
+[tournage](docs/filming_guide.md), [consentement](docs/dataset/consentement.md) et
+[registre](docs/dataset/README.md), [annotation](docs/annotation.md),
+[fiche du jeu](docs/dataset_card.md).
+
+```bash
+# Annotation CVAT (« CVAT for video 1.1 ») -> ball.csv, court.json, events.json du match
+tennisvision annotation import-cvat export.xml --match verite/m01 --annotateur A1
+
+# Dossier de vérité terrain : avancement vs critères du Lot 2, découpage par match (test gelé),
+# accord entre deux annotateurs, statistiques de la fiche du jeu
+tennisvision dataset check verite/
+tennisvision dataset split verite/
+tennisvision dataset accord verite/ verite_b/
+tennisvision dataset card verite/
+
+# TenniSet : étiquettes faibles tirées des textes, échantillon de 50 frappes pour contrôler `Side`
+tennisvision tenniset weak-labels --data-dir data --sortie etiquettes_faibles.csv
+tennisvision tenniset side-sample --n 50 --sortie side_sample.csv
+```
+
 ## Structure
 
 ```

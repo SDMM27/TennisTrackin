@@ -229,10 +229,18 @@ def charger_verites_tenniset(
         raise FileNotFoundError(f"Aucune annotation V0xx.json dans {dossier / 'annotations'}")
     verites = {}
     for fichier in fichiers:
-        doc, _ = charger_evenements_tenniset(fichier, fps)
-        intervalles = None
+        try:
+            doc, _ = charger_evenements_tenniset(fichier, fps)
+            intervalles = None
+            if split != "all":
+                intervalles = intervalles_split_tenniset(fichier)[split]
+        except (KeyError, TypeError, AttributeError, IndexError) as exc:
+            raise ValueError(
+                f"{fichier} : annotation TenniSet de structure invalide ({exc!r})"
+            ) from exc
+        except ValueError as exc:
+            raise ValueError(f"{fichier} : {exc}") from exc
         if split != "all":
-            intervalles = intervalles_split_tenniset(fichier)[split]
             doc = filtrer_split(doc, intervalles)
         verites[fichier.stem] = {
             "events": doc,
