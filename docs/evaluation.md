@@ -42,6 +42,14 @@ Une prédiction égale à la vérité donne F1 = 1 partout et des erreurs d'indi
     └── match.json         facultatif
 ```
 
+Ce dossier se construit avec les outils du Lot 2 : annotation dans CVAT puis
+`tennisvision annotation import-cvat` ([annotation.md](annotation.md)), métadonnées dans
+`registre.csv` ([dataset/README.md](dataset/README.md)), `splits.json` écrit par
+`tennisvision dataset split` (jeu de test **gelé**), avancement et accord entre annotateurs par
+`tennisvision dataset check` et `tennisvision dataset accord`, fiche du jeu dans
+[dataset_card.md](dataset_card.md). Le registre n'est pas lu par `eval` : seuls `splits.json` et
+les fichiers de contrat comptent.
+
 Le découpage se fait **par match**, jamais à l'intérieur d'un match (ADR-003). Une brique n'est
 évaluée que si la vérité terrain a le fichier correspondant. La hauteur d'image, qui met les
 seuils de la balle à l'échelle, vient de la clé `image_size` de `match.json` si elle existe, sinon

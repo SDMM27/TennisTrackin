@@ -1,6 +1,7 @@
 """Tests de bout en bout des commandes `eval` et `tenniset export-events`."""
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -124,3 +125,68 @@ def test_aide_eval(capsys):
     with pytest.raises(SystemExit):
         cli.build_parser().parse_args(["eval", "--help"])
     assert "--predictions" in capsys.readouterr().out
+
+
+# --- Entrées illisibles ou de structure invalide : message propre, code 2 ---------------------
+
+
+def copie_amateur(tmp_path: Path) -> Path:
+    dossier = tmp_path / "amateur"
+    shutil.copytree(AMATEUR, dossier)
+    return dossier
+
+
+def eval_amateur(gt: Path, pred: Path, tmp_path: Path) -> int:
+    return cli.main(
+        ["eval", "--dataset", "amateur", "--gt-dir", str(gt), "--predictions", str(pred),
+         "--output-dir", str(tmp_path / "rapports")]
+    )  # fmt: skip
+
+
+@pytest.mark.parametrize(
+    ("fichier", "contenu", "attendu"),
+    [
+        ("events.json", '{"events": 5}', "structure invalide"),
+        ("events.json", '{"events": [{"type": "hit"}]}', "frame_idx"),
+        ("events.json", "[]", "structure invalide"),
+        ("events.json", "{pas du json", "JSON illisible"),
+        ("court.json", '{"segments": 3}', "segments"),
+        ("court.json", '{"segments": [{"valid_from_frame": 0}]}', "keypoints_px"),
+        ("ball.csv", "x,y,visible\n1,2,1\n", "colonnes manquantes : frame_idx"),
+        ("ball.csv", "", "CSV illisible"),
+        ("players.csv", "frame_idx,player_id\n0,P1\n", "colonnes manquantes"),
+    ],
+)
+@pytest.mark.parametrize("cote", ["predictions", "verite"])
+def test_entree_invalide_erreur_propre(tmp_path, capsys, cote, fichier, contenu, attendu):
+    gt, pred = copie_amateur(tmp_path), tmp_path / "pred"
+    shutil.copytree(gt, pred)
+    cible = pred if cote == "predictions" else gt
+    (cible / "M1" / fichier).write_text(contenu, encoding="utf-8")
+    assert eval_amateur(gt, pred, tmp_path) == 2
+    err = capsys.readouterr().err
+    assert err.startswith("Erreur : ") and "Traceback" not in err
+    assert fichier in err and attendu in err
+    assert not (tmp_path / "rapports").exists()
+
+
+def test_match_json_invalide(tmp_path, capsys):
+    gt = copie_amateur(tmp_path)
+    (gt / "M1" / "match.json").write_text('{"image_size": "grand"}', encoding="utf-8")
+    assert eval_amateur(gt, gt, tmp_path) == 2
+    assert "match.json" in capsys.readouterr().err
+
+
+def test_annotation_tenniset_invalide(tmp_path, capsys):
+    data = tmp_path / "data"
+    (data / "annotations").mkdir(parents=True)
+    (data / "annotations" / "V900.json").write_text(
+        '{"video": "v", "classes": 5}', encoding="utf-8"
+    )
+    (tmp_path / "pred").mkdir()
+    code = cli.main(
+        ["eval", "--dataset", "tenniset", "--data-dir", str(data), "--split", "all",
+         "--predictions", str(tmp_path / "pred"), "--output-dir", str(tmp_path / "r")]
+    )  # fmt: skip
+    assert code == 2
+    assert "V900.json" in capsys.readouterr().err

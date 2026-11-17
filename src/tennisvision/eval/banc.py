@@ -79,11 +79,11 @@ def charger_verites_amateur(gt_dir: str | Path, split: str) -> dict[str, dict]:
             raise FileNotFoundError(f"Dossier de vérité terrain introuvable : {dossier}")
         verites[match] = {
             "events": _lire_json(dossier / "events.json"),
-            "ball": lire_ball_csv(dossier / "ball.csv")
+            "ball": _lire_table(dossier / "ball.csv", lire_ball_csv)
             if (dossier / "ball.csv").is_file()
             else None,
             "court": _lire_json(dossier / "court.json"),
-            "players": lire_players_csv(dossier / "players.csv")
+            "players": _lire_table(dossier / "players.csv", lire_players_csv)
             if (dossier / "players.csv").is_file()
             else None,
             "hauteur_image": _hauteur_image(dossier),
@@ -91,10 +91,82 @@ def charger_verites_amateur(gt_dir: str | Path, split: str) -> dict[str, dict]:
     return verites
 
 
+def _structure_events(doc) -> str | None:
+    if not isinstance(doc, dict) or not isinstance(doc.get("events"), list):
+        return "clé « events » (liste) attendue"
+    for i, ev in enumerate(doc["events"]):
+        if not isinstance(ev, dict) or "type" not in ev or not _est_entier(ev.get("frame_idx")):
+            return f"events[{i}] : objet avec « type » et « frame_idx » (entier) attendu"
+    return None
+
+
+def _structure_court(doc) -> str | None:
+    if not isinstance(doc, dict) or not isinstance(doc.get("segments"), list):
+        return "clé « segments » (liste) attendue"
+    if _structure_match(doc):
+        return "« image_size » = [largeur, hauteur] attendu"
+    for i, seg in enumerate(doc["segments"]):
+        if not isinstance(seg, dict) or not all(
+            c in seg for c in ("valid_from_frame", "keypoints_px", "homography")
+        ):
+            return (
+                f"segments[{i}] : « valid_from_frame », « keypoints_px » et « homography » attendus"
+            )
+    return None
+
+
+def _structure_match(doc) -> str | None:
+    taille = doc.get("image_size") if isinstance(doc, dict) else None
+    if not isinstance(doc, dict) or (
+        taille is not None
+        and not (
+            isinstance(taille, list) and len(taille) == 2 and all(_est_entier(v) for v in taille)
+        )
+    ):
+        return "objet attendu, avec « image_size » = [largeur, hauteur] s'il est présent"
+    return None
+
+
+_STRUCTURES_JSON = {
+    "events.json": _structure_events,
+    "court.json": _structure_court,
+    "match.json": _structure_match,
+}
+_COLONNES_TABLES = {
+    "ball.csv": ("frame_idx", "x", "y", "visible"),
+    "players.csv": ("frame_idx", "player_id", "bbox_x1", "bbox_y1", "bbox_x2", "bbox_y2"),
+}
+
+
 def _lire_json(chemin: Path) -> dict | None:
+    """Document JSON d'un fichier de contrat (None s'il est absent).
+
+    ValueError, avec le nom du fichier, si le JSON est illisible ou de structure inattendue.
+    """
     if not chemin.is_file():
         return None
-    return json.loads(chemin.read_text(encoding="utf-8"))
+    try:
+        doc = json.loads(chemin.read_text(encoding="utf-8"))
+    except ValueError as exc:  # JSON invalide ou octets non UTF-8
+        raise ValueError(f"{chemin} : JSON illisible : {exc}") from exc
+    controle = _STRUCTURES_JSON.get(chemin.name)
+    anomalie = controle(doc) if controle else None
+    if anomalie:
+        raise ValueError(f"{chemin} : structure invalide : {anomalie}")
+    return doc
+
+
+def _lire_table(chemin: Path, lecteur) -> pd.DataFrame:
+    """Table CSV d'un fichier de contrat ; ValueError, avec le nom du fichier, si elle est
+    illisible ou s'il lui manque des colonnes."""
+    try:
+        table = lecteur(chemin)
+    except ValueError as exc:  # CSV vide, mal formé ou octets non UTF-8
+        raise ValueError(f"{chemin} : CSV illisible : {exc}") from exc
+    manquantes = [c for c in _COLONNES_TABLES[chemin.name] if c not in table.columns]
+    if manquantes:
+        raise ValueError(f"{chemin} : colonnes manquantes : {', '.join(manquantes)}")
+    return table
 
 
 def _hauteur_image(dossier: Path) -> int:
@@ -122,9 +194,13 @@ def _charger_predictions(dossier: Path, gt: dict, a_signaler: list[str]) -> dict
 
     return {
         "events": charger("events", "events.json", _lire_json, {"events": []}),
-        "ball": charger("ball", "ball.csv", lire_ball_csv, pd.DataFrame()),
+        "ball": charger(
+            "ball", "ball.csv", lambda c: _lire_table(c, lire_ball_csv), pd.DataFrame()
+        ),
         "court": charger("court", "court.json", _lire_json, {"segments": []}),
-        "players": charger("players", "players.csv", lire_players_csv, pd.DataFrame()),
+        "players": charger(
+            "players", "players.csv", lambda c: _lire_table(c, lire_players_csv), pd.DataFrame()
+        ),
     }
 
 

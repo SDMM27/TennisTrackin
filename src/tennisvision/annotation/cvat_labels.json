@@ -1,0 +1,234 @@
+[
+  {
+    "name": "balle",
+    "color": "#ffd400",
+    "type": "points",
+    "attributes": [
+      {
+        "name": "visible",
+        "input_type": "checkbox",
+        "mutable": true,
+        "values": [
+          "true"
+        ],
+        "default_value": "true"
+      }
+    ]
+  },
+  {
+    "name": "court",
+    "color": "#00a6ff",
+    "type": "points",
+    "attributes": [
+      {
+        "name": "kp",
+        "input_type": "select",
+        "mutable": false,
+        "values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13"
+        ],
+        "default_value": "0"
+      }
+    ]
+  },
+  {
+    "name": "frappe",
+    "color": "#ff5a36",
+    "type": "tag",
+    "attributes": [
+      {
+        "name": "joueur",
+        "input_type": "select",
+        "mutable": false,
+        "values": [
+          "P1",
+          "P2"
+        ],
+        "default_value": "P1"
+      },
+      {
+        "name": "coup",
+        "input_type": "select",
+        "mutable": false,
+        "values": [
+          "serve",
+          "forehand",
+          "backhand",
+          "forehand_volley",
+          "backhand_volley",
+          "smash",
+          "uncertain"
+        ],
+        "default_value": "serve"
+      },
+      {
+        "name": "issue",
+        "input_type": "select",
+        "mutable": false,
+        "values": [
+          "in_play",
+          "winner",
+          "unforced_error",
+          "forced_error",
+          "unknown"
+        ],
+        "default_value": "in_play"
+      }
+    ]
+  },
+  {
+    "name": "rebond",
+    "color": "#2ecc71",
+    "type": "points",
+    "attributes": [
+      {
+        "name": "in_out",
+        "input_type": "select",
+        "mutable": false,
+        "values": [
+          "in",
+          "out",
+          "too_close"
+        ],
+        "default_value": "in"
+      }
+    ]
+  },
+  {
+    "name": "filet",
+    "color": "#9b59b6",
+    "type": "tag",
+    "attributes": []
+  },
+  {
+    "name": "service",
+    "color": "#e67e22",
+    "type": "tag",
+    "attributes": [
+      {
+        "name": "numero",
+        "input_type": "select",
+        "mutable": false,
+        "values": [
+          "1",
+          "2"
+        ],
+        "default_value": "1"
+      },
+      {
+        "name": "resultat",
+        "input_type": "select",
+        "mutable": false,
+        "values": [
+          "in",
+          "fault",
+          "let"
+        ],
+        "default_value": "in"
+      },
+      {
+        "name": "faute",
+        "input_type": "select",
+        "mutable": false,
+        "values": [
+          "net",
+          "long",
+          "wide",
+          "foot",
+          "unknown"
+        ],
+        "default_value": "net"
+      },
+      {
+        "name": "serveur",
+        "input_type": "select",
+        "mutable": false,
+        "values": [
+          "P1",
+          "P2"
+        ],
+        "default_value": "P1"
+      }
+    ]
+  },
+  {
+    "name": "debut_point",
+    "color": "#1abc9c",
+    "type": "tag",
+    "attributes": []
+  },
+  {
+    "name": "fin_point",
+    "color": "#e74c3c",
+    "type": "tag",
+    "attributes": [
+      {
+        "name": "gagnant",
+        "input_type": "select",
+        "mutable": false,
+        "values": [
+          "P1",
+          "P2"
+        ],
+        "default_value": "P1"
+      },
+      {
+        "name": "serveur",
+        "input_type": "select",
+        "mutable": false,
+        "values": [
+          "P1",
+          "P2"
+        ],
+        "default_value": "P1"
+      },
+      {
+        "name": "raison",
+        "input_type": "text",
+        "mutable": false,
+        "values": [
+          ""
+        ],
+        "default_value": ""
+      }
+    ]
+  },
+  {
+    "name": "score",
+    "color": "#34495e",
+    "type": "tag",
+    "attributes": [
+      {
+        "name": "jeux",
+        "input_type": "text",
+        "mutable": false,
+        "values": [
+          ""
+        ],
+        "default_value": ""
+      },
+      {
+        "name": "sets",
+        "input_type": "text",
+        "mutable": false,
+        "values": [
+          ""
+        ],
+        "default_value": ""
+      }
+    ]
+  }
+]
