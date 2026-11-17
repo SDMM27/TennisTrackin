@@ -8,9 +8,8 @@ from pathlib import Path
 
 from platformdirs import user_cache_dir
 
-# Classes COCO utilisées
+# Classe COCO suivie par YOLO (la balle a son propre détecteur : `tennisvision.balle`)
 PERSON = 0
-SPORTS_BALL = 32
 
 ENV_MODELS_DIR = "TENNISVISION_MODELS_DIR"
 ENV_OUTPUT_DIR = "TENNISVISION_OUTPUT_DIR"
@@ -19,10 +18,7 @@ ENV_TENNISET_DIR = "TENNISVISION_TENNISET_DIR"
 DEFAULT_MODEL = "yolo11n"  # nom dans le registre (models.toml)
 DEFAULT_CONF = 0.25
 DEFAULT_TRACKER = "bytetrack.yaml"
-# Taille d'inférence YOLO. Mesuré sur le point P00000001 de V006 : à 1280, le taux brut de
-# « balle » monte à ~70 %, mais ce sont presque tous des faux positifs (roue de la caméra TV) ;
-# la vraie balle reste détectée sur < 2 % des frames et le traitement est 2x plus lent.
-# On garde donc 640 tant que la balle n'a pas son propre modèle (étape 1 de la ROADMAP).
+# Taille d'inférence YOLO pour les personnes (la balle est traitée par `tennisvision.balle`).
 DEFAULT_IMGSZ = 640
 
 

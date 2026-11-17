@@ -1,4 +1,4 @@
-"""Détection et suivi (YOLO + ByteTrack via ultralytics), frame par frame."""
+"""Détection et suivi des personnes (YOLO + ByteTrack via ultralytics), frame par frame."""
 
 from dataclasses import dataclass
 
@@ -9,11 +9,10 @@ from tennisvision.config import (
     DEFAULT_IMGSZ,
     DEFAULT_TRACKER,
     PERSON,
-    SPORTS_BALL,
 )
 from tennisvision.models import resoudre_modele
 
-LABELS = {PERSON: "person", SPORTS_BALL: "ball"}
+LABELS = {PERSON: "person"}
 
 
 @dataclass(frozen=True)
@@ -42,7 +41,7 @@ class Detection:
 
 
 class Tracker:
-    """Enveloppe d'un modèle YOLO avec suivi ByteTrack persistant entre les frames."""
+    """Enveloppe d'un modèle YOLO avec suivi ByteTrack (personnes seulement) entre les frames."""
 
     def __init__(
         self,
@@ -65,7 +64,7 @@ class Tracker:
         result = self.model.track(
             frame,
             persist=True,
-            classes=[PERSON, SPORTS_BALL],
+            classes=[PERSON],
             conf=self.conf,
             imgsz=self.imgsz,
             tracker=self.tracker,

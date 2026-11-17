@@ -47,6 +47,16 @@ Négatives :
 - la licence des poids et du jeu d'entraînement n'est pas encore vérifiée (ADR-005) ;
 - le critère « F1 ≥ 0,85 à 10 px » reste un objectif proposé, à recaler après la première mesure.
 
+## Mise à jour du 2026-11-17 (Lot 4)
+
+- **TrackNetV3 n'est pas comparé** : ses poids publics sont entraînés sur le badminton
+  uniquement. La comparaison porte sur **WASB** et **TrackNetV2 tennis**, deux poids publics
+  du zoo WASB-SBDT (code sous licence MIT ; données d'entraînement TrackNet tennis, licence non
+  vérifiée, cf. ADR-005).
+- **WASB est le modèle par défaut** (`wasb_tennis`) : sur V006 P00000001, il donne le même taux de
+  présence que TrackNetV2 et va 1,5 fois plus vite sur CPU. La roue de caméra n'est plus
+  retenue. Le choix définitif attend la mesure F1 sur le jeu amateur (voir `docs/balle.md`).
+
 ## Références
 
 - PLAN_AMELIORATION.md § 3.3 (familles de modèles, recommandation) ;

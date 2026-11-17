@@ -4,4 +4,20 @@ fichier = "yolo11n.pt"
 url = "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt"
 sha256 = "0ebbc80d4a7680d14987a577cd21342b65ecfd94632bd9a8da63ae6417644ee1"
 licence = "AGPL-3.0"
-description = "YOLO11 nano COCO (joueurs ; balle à titre provisoire, cf. ADR-004)"
+description = "YOLO11 nano COCO (détection et suivi des personnes ; la balle a son propre modèle, cf. ADR-004)"
+
+[wasb_tennis]
+version = "bmvc2023"
+fichier = "wasb_tennis_best.pth.tar"
+url = "https://drive.usercontent.google.com/download?id=14AeyIOCQ2UaQmbZLNQJa1H_eSwxUXk7z&export=download&confirm=t"
+sha256 = "9d391239ab10c733f8e5bfadf16ab72838e7a8ebc88e8ae2038501c03d42b4bb"
+licence = "MIT (code WASB-SBDT) ; poids entraînés sur le jeu TrackNet tennis, licence des données non vérifiée (ADR-005)"
+description = "WASB-SBDT HRNet (BMVC 2023), balle de tennis, 3 images -> 3 cartes de chaleur"
+
+[tracknetv2_tennis]
+version = "bmvc2023"
+fichier = "tracknetv2_tennis_best.pth.tar"
+url = "https://drive.usercontent.google.com/download?id=1BCnmvDX-LZpbkk4vlMEXMm-uzCoqJzDx&export=download&confirm=t"
+sha256 = "f9995157411550c9f5a829e6fa58d2d7c276912fa9b02e5509c199f91b37a51d"
+licence = "MIT (code WASB-SBDT) ; poids entraînés sur le jeu TrackNet tennis, licence des données non vérifiée (ADR-005)"
+description = "TrackNetV2 (U-Net) du banc WASB-SBDT, balle de tennis, 3 images -> 3 cartes de chaleur"

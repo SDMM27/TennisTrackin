@@ -53,10 +53,6 @@ def test_summarize(info):
         *[_det(f, 1, "person") for f in range(4)],
         *[_det(f, 2, "person") for f in range(2)],
         _det(0, None, "person"),
-        # balle sur 2 frames, 3 détections
-        _det(0, None, "ball"),
-        _det(0, None, "ball"),
-        _det(3, 7, "ball"),
     ]
     df = detections_to_dataframe(dets, _t_ms(dets))
     resume = summarize(df, info, (0, 9), 10, (0.0, 360.0))
@@ -66,8 +62,7 @@ def test_summarize(info):
         {"track_id": 1, "n_frames": 4},
         {"track_id": 2, "n_frames": 2},
     ]
-    assert resume["n_detections_balle"] == 3
-    assert resume["taux_detection_balle"] == pytest.approx(0.2)
+    assert "n_detections_balle" not in resume and "taux_detection_balle" not in resume
     assert resume["video"] == "v.mp4"  # nom seul, jamais le chemin
     assert resume["fps_nominal"] == 25.0
     assert resume["rotation"] == 0
@@ -75,15 +70,6 @@ def test_summarize(info):
     assert resume["intervalle"] == [0, 9]
     assert resume["intervalle_ms"] == [0.0, 360.0]
     assert resume["duree_ms"] == 360.0
-
-
-def test_summarize_taux_balle_sur_frames_traitees(info):
-    # 2 frames avec balle sur 4 traitées
-    dets = [_det(0, None, "ball"), _det(0, None, "ball"), _det(2, None, "ball")]
-    df = detections_to_dataframe(dets, _t_ms(dets))
-    resume = summarize(df, info, (0, 3), 4, (0.0, 120.0))
-    assert resume["n_frames_traitees"] == 4
-    assert resume["taux_detection_balle"] == pytest.approx(0.5)
 
 
 def test_summarize_top_limite_a_cinq(info):
@@ -96,5 +82,4 @@ def test_summarize_top_limite_a_cinq(info):
 def test_summarize_sans_detection(info):
     resume = summarize(detections_to_dataframe([], {}), info, (5, 14), 10, (200.0, 560.0))
     assert resume["n_identites"] == 0
-    assert resume["taux_detection_balle"] == 0.0
     assert resume["duree_ms"] == 360.0

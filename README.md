@@ -73,10 +73,15 @@ data/
 ## Utilisation
 
 ```bash
-# Détection + tracking sur une vidéo (ou un intervalle de frames), sorties dans
+# Joueurs (YOLO) + balle (réseau dédié) sur une vidéo (ou un intervalle de frames), sorties dans
 # ./tennisvision-sorties/<video>_<debut>-<fin>/
 tennisvision analyze match.mp4
 tennisvision analyze match.mp4 --start 250 --end 500 --no-video
+
+# Balle : masque de court (court.json ou polygone), seuil, ou désactivation ; balle seule
+tennisvision analyze match.mp4 --court court.json --ball-threshold 0.4
+tennisvision analyze match.mp4 --ball-model aucun
+tennisvision ball track match.mp4 --start 250 --end 500
 
 # Avec la description du match (match.json validé puis copié dans le dossier de sortie)
 tennisvision analyze match.mp4 --match match.json --output-dir sortie/
@@ -93,7 +98,7 @@ tennisvision validate tennisvision-sorties/match_0-499
 
 # Modèles : liste (présent/absent), téléchargement, import d'un fichier local
 tennisvision models list
-tennisvision models pull yolo11n
+tennisvision models pull yolo11n wasb_tennis
 tennisvision models import yolo11n chemin/vers/yolo11n.pt
 ```
 
@@ -104,13 +109,17 @@ du cache — le message indique `tennisvision models pull` —, point inconnu…
 Sorties dans `tennisvision-sorties/<video>_<debut>-<fin>/` (ou `--output-dir`), toutes
 référencées par des chemins **relatifs** dans `summary.json` :
 - `annotated.mp4` : vidéo annotée en **H.264** (lisible dans les navigateurs) : boîtes joueurs
-  avec ID, balle et sa traînée, numéro de frame et temps réel ;
-- `tracks.csv` : une ligne par détection (`frame_idx`, `t_ms`, track_id, classe, confiance,
-  boîte) ;
+  avec ID, balle (cercle plein si détectée, creux si interpolée) et sa traînée, numéro de frame
+  et temps réel ;
+- `tracks.csv` : une ligne par détection de **personne** (`frame_idx`, `t_ms`, track_id, classe,
+  confiance, boîte) ;
+- `ball.csv` : trajectoire de la balle, une ligne par frame traitée (`frame_idx`, `t_ms`, `x`,
+  `y`, `visible`, `score`, `source`), voir `docs/balle.md` ;
 - `frames.parquet` : index complet de la vidéo (`frame_idx`, `t_ms`), seule source de temps du
   pipeline ;
 - `summary.json` : résumé chiffré (intervalle en frames et en ms, durée, identités suivies,
-  taux de détection de la balle, modèle utilisé avec sa somme SHA-256, version, vitesse) ;
+  bloc `balle` (modèle, taux de frames visibles, diagnostic du post-traitement), modèle YOLO
+  utilisé avec sa somme SHA-256, version, vitesse) ;
 - `match.json` : copie du fichier donné par `--match`, s'il y en a un.
 
 **Vidéos de téléphone** : la cadence variable est gérée (les durées viennent des horodatages
@@ -188,11 +197,9 @@ ruff check src tests
 
 ## Limites connues (étape 0)
 
-- La balle est détectée par le YOLO COCO générique (`sports ball`) : petite, rapide et floue,
-  elle est presque toujours ratée. Mesure sur le point `P00000001` de V006 : vraie balle trouvée
-  sur < 2 % des frames. Le `taux_detection_balle` de `summary.json` est un taux **brut** qui
-  compte aussi les faux positifs (ex. à `--imgsz 1280`, une roue de caméra TV fait monter le
-  taux à ~70 %). La vraie mesure (précision/rappel contre des frames annotées) arrive à l'étape 1.
+- La balle vient d'un réseau dédié (WASB-SBDT, poids publics entraînés sur du tennis de
+  diffusion), pas de YOLO : voir `docs/balle.md` pour la chaîne de traitement, les licences
+  (celle des données d'entraînement des poids n'est pas vérifiée) et les mesures.
 - `n_identites` compte toutes les personnes suivies (arbitres, ramasseurs, public), pas seulement
   les 2 joueurs : le filtrage par position sur le court viendra avec la calibration (étape 2).
 - Les vidéos TenniSet sont des images de diffusion TV (changements de plan, ralentis) : le

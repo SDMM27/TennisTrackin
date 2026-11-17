@@ -26,6 +26,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
+onnx = ["onnx", "onnxruntime", "onnxscript"]
 
 [project.scripts]
 tennisvision = "tennisvision.cli:main"
