@@ -80,7 +80,8 @@ Valeurs de `coup` : `serve`, `forehand`, `backhand`, `forehand_volley`, `backhan
 - **Service** : `numero` 1 ou 2 ; `resultat` `in` (bon), `fault` (faute, avec `faute` : filet,
   long, large, pied) ou `let` (le service est rejoué, même numéro).
 - **Balle visible** : visible si on distingue la balle. Hors de l'image, cachée ou impossible à
-  localiser : `visible` décoché (ou « outside » dans CVAT).
+  localiser : `visible` décoché (ou « outside » ou « occluded » dans CVAT : l'import les traite
+  tous comme non visible).
 
 ## 4. Les trois niveaux d'annotation
 
@@ -121,9 +122,12 @@ Ajoute la position de la balle. Une seule **piste** `balle` par vidéo, en point
 
 ### Le court : à tous les niveaux
 
-Placez les repères `court` sur **une frame par plan de caméra** : un point par repère, attribut
-`kp` de « 0 » à « 13 ». Si le téléphone a bougé, refaites un jeu complet à la première frame
-stable suivante (notez l'heure d'après le journal de tournage).
+Placez les repères `court` : un point par repère, attribut `kp` de « 0 » à « 13 ». **Le premier
+jeu vaut dès le début de la vidéo** (la caméra est supposée fixe jusqu'au premier déplacement) :
+il suffit de l'annoter sur n'importe quelle frame stable. N'en placez un nouveau que **lorsque le
+téléphone a bougé**, à la première frame stable suivante (notez l'heure d'après le journal de
+tournage). Les rebonds ont besoin d'un court : sans repères `court` (4 au minimum), l'import des
+rebonds échoue.
 
 | `kp` | Repère |
 |---|---|

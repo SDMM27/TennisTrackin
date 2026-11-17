@@ -50,13 +50,13 @@ s'écrivent exactement ainsi, dans cet ordre. Les listes se séparent par `;`.
 | `telephone` | modèle de téléphone | texte, ex. `Pixel 8` |
 | `fps_nominal` | cadence nominale | nombre, ex. `30` ou `60` |
 | `resolution` | résolution | ex. `1920x1080` |
-| `joueurs` | joueurs, **pseudonymes** | `J01;J02` (jamais de nom réel) |
+| `joueurs` | joueurs, **pseudonymes** | `J01;J02` (forme `J` + chiffres obligatoire ; `dataset check` refuse tout autre texte, jamais de nom réel) |
 | `niveau_jeu` | niveau des joueurs | `debutant`, `intermediaire`, `confirme`, `classe` |
 | `niveau_annotation` | niveau d'annotation atteint | `1`, `2` ou `3` (cf. [annotation.md](../annotation.md)) |
 | `consentements` | identifiants des formulaires | `C001;C002` |
 | `consentements_archives` | formulaires signés bien archivés ? | `oui` ou `non` |
 | `licence` | licence d'utilisation de la vidéo | texte court, ex. `usage interne`, `extraits publiables`, `jeu publiable` (selon les cases cochées) |
-| `annotateurs` | annotateurs (identifiants, pas de noms) | `A1;A2` |
+| `annotateurs` | annotateurs (identifiants `A` + chiffres, pas de noms ; vérifié par `dataset check`) | `A1;A2` |
 | `double_annotation` | match annoté deux fois ? | `oui` ou `non` |
 | `notes` | remarques libres | texte (téléphone déplacé à telle heure, etc.) |
 

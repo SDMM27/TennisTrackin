@@ -1,6 +1,7 @@
 """Registre du jeu amateur : `<gt_dir>/registre.csv` (métadonnées hors contrat, joueurs pseudonymisés)."""
 
 import csv
+import re
 from pathlib import Path
 
 NOM_REGISTRE = "registre.csv"
@@ -26,6 +27,10 @@ SURFACES = ("terre", "dur", "interieur", "gazon", "autre")
 NIVEAUX_JEU = ("debutant", "intermediaire", "confirme", "classe")
 NIVEAUX_ANNOTATION = ("1", "2", "3")
 OUI_NON = ("oui", "non")
+
+
+PSEUDONYME = re.compile(r"^J\d+$")
+ID_ANNOTATEUR = re.compile(r"^A\d+$")
 
 
 def lire_registre(gt_dir: str | Path) -> list[dict[str, str]] | None:
@@ -80,4 +85,8 @@ def problemes_ligne(ligne: dict[str, str]) -> list[str]:
         problemes.append(f"fps_nominal : « {ligne['fps_nominal']} » (nombre positif attendu)")
     if not liste(ligne["joueurs"]):
         problemes.append("joueurs : aucun pseudonyme")
+    if not all(PSEUDONYME.match(j) for j in liste(ligne["joueurs"])):
+        problemes.append("joueurs : pseudonymes J01, J02… attendus, jamais un nom réel")
+    if not all(ID_ANNOTATEUR.match(a) for a in liste(ligne["annotateurs"])):
+        problemes.append("annotateurs : identifiants A1, A2… attendus, jamais un nom réel")
     return problemes

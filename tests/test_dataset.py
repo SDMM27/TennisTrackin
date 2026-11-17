@@ -360,7 +360,10 @@ def test_card_remplace_le_bloc_sans_toucher_le_reste(gt_complet, tmp_path):
     assert texte.endswith("## Biais\n\nÀ remplir.\n")
     assert "- Matchs : 10" in texte and "- Joueurs distincts (pseudonymes) : 6" in texte
     assert "- Surfaces : dur : 3, interieur : 3, terre : 4" in texte
-    assert "- Frappes annotées : 40" in texte and "- Frames de balle annotées : 180" in texte
+    assert (
+        "- Frappes annotées : 40" in texte
+        and "- Frames de balle visibles (interpolées comprises) : 180" in texte
+    )
     assert "J01" not in texte  # jamais de pseudonyme ni de nom
     avant = texte
     cli.main(["dataset", "card", str(gt_complet), "--sortie", str(carte)])
@@ -383,3 +386,53 @@ def test_modele_de_registre_livre_dans_la_doc():
     if not modele.is_file():
         pytest.skip("docs/ absent (paquet installé hors du dépôt)")
     assert modele.read_text(encoding="utf-8-sig").splitlines()[0] == ",".join(COLONNES)
+
+
+# --- Revue : splits mal formé, pseudonymes, fiche, libellé ---------------------------------
+
+
+@pytest.mark.parametrize("contenu", ["[1, 2]", '{"test": "M1"}', '{"test": [1]}', "{pas du json"])
+def test_split_splits_json_mal_forme(gt_complet, capsys, contenu):
+    (gt_complet / "splits.json").write_text(contenu, encoding="utf-8")
+    assert cli.main(["dataset", "split", str(gt_complet)]) == 2
+    err = capsys.readouterr().err
+    assert "splits.json" in err and "Traceback" not in err
+
+
+@pytest.mark.parametrize(
+    ("champs", "attendu"),
+    [
+        ({"joueurs": "Jean Dupont;J02"}, "pseudonymes J01"),
+        ({"joueurs": "J1;Marie"}, "pseudonymes J01"),
+        ({"annotateurs": "Alice"}, "identifiants A1"),
+        ({"annotateurs": "A1;Bob"}, "identifiants A1"),
+    ],
+)
+def test_registre_refuse_les_noms_reels(gt, capsys, champs, attendu):
+    creer_match(gt, "M1")
+    ecrire_registre(gt, [ligne("M1", **champs)])
+    cli.main(["dataset", "check", str(gt)])
+    assert attendu in capsys.readouterr().out
+
+
+def test_registre_pseudonymes_valides(gt, capsys):
+    creer_match(gt, "M1")
+    ecrire_registre(gt, [ligne("M1", joueurs="J01;J12", annotateurs="A1;A2")])
+    cli.main(["dataset", "check", str(gt)])
+    assert "ERREUR  M1" not in capsys.readouterr().out
+
+
+def test_check_libelle_balle(gt, capsys):
+    creer_match(gt, "M1")
+    ecrire_registre(gt, [ligne("M1")])
+    cli.main(["dataset", "check", str(gt)])
+    assert "frames balle visibles (interpolées comprises)" in capsys.readouterr().out
+
+
+def test_card_enregistre_le_test_gele(gt_complet, tmp_path):
+    carte = tmp_path / "fiche.md"
+    cli.main(["dataset", "card", str(gt_complet), "--sortie", str(carte)])
+    assert "- Matchs du test gelé : splits.json absent" in carte.read_text(encoding="utf-8")
+    test = decoupage.decouper(gt_complet)["test"]
+    cli.main(["dataset", "card", str(gt_complet), "--sortie", str(carte)])
+    assert f"- Matchs du test gelé : {', '.join(sorted(test))}" in carte.read_text(encoding="utf-8")

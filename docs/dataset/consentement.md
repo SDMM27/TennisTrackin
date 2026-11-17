@@ -56,14 +56,15 @@ section 6, ce qui est permis.
 ## 6. Vos choix sur l'utilisation et la diffusion
 
 Chaque case est un choix **séparé** : rien n'est coché d'avance, et cocher l'une ne vous engage
-pas pour les autres. Sans la première case, nous ne pouvons pas vous filmer. Les deux autres
-sont facultatives et sans conséquence si vous les laissez vides.
+pas pour les autres. La première case est nécessaire pour participer : sans elle, nous ne pouvons
+pas vous filmer. Les deux autres sont des **accords supplémentaires, facultatifs** : les laisser
+vides est sans conséquence pour vous.
 
-- [ ] **Usage interne uniquement.** Les vidéos et annotations restent dans l'équipe du projet. Rien
-  n'est diffusé à l'extérieur.
-- [ ] **Publication d'extraits.** J'accepte que de **courts extraits** (quelques secondes)
+- [ ] **Usage interne (obligatoire pour participer).** Les vidéos et annotations sont utilisées
+  par l'équipe du projet pour les finalités de la section 2. Rien n'est diffusé à l'extérieur.
+- [ ] **Publication d'extraits (facultatif).** J'accepte que de **courts extraits** (quelques secondes)
   de ma vidéo soient montrés publiquement (site, présentation, article) pour illustrer le projet.
-- [ ] **Publication du jeu de données.** J'accepte que la **vidéo complète et ses
+- [ ] **Publication du jeu de données (facultatif).** J'accepte que la **vidéo complète et ses
   annotations** soient **publiées** dans un jeu de données mis à la disposition d'autres
   chercheurs ou développeurs [préciser sous quelle licence et sur quelle plateforme].
 
@@ -82,6 +83,8 @@ Vous pouvez à tout moment, en écrivant à l'adresse de contact de la section 1
 - les faire **rectifier** si elles sont inexactes ;
 - demander leur **effacement** ;
 - vous **opposer** à leur traitement ou en demander la **limitation** ;
+- demander la **portabilité** de vos données (article 20 du RGPD, applicable car le traitement
+  repose sur votre consentement) : les recevoir dans un format structuré et couramment utilisé ;
 - **retirer votre consentement**, **sans avoir à vous justifier** et sans conséquence pour vous.
 
 Le retrait est aussi simple que le consentement. Il n'affecte pas la légalité de ce qui a été fait
@@ -102,33 +105,46 @@ avant le retrait.
 
 ## 8. Mineurs
 
-Si la personne filmée a **moins de [15] ans** (âge à confirmer selon le droit applicable), le
-consentement doit être donné par un **titulaire de l'autorité parentale** (ou conjointement avec
-lui). Si elle a plus de cet âge mais est mineure, l'accord d'un parent est tout de même
-recommandé [à confirmer]. Le formulaire est alors signé par le parent ou tuteur, qui indique sa
-qualité.
+Pour **toute personne de moins de 18 ans**, l'autorisation de filmer est donnée par le ou les
+**titulaires de l'autorité parentale**, qui signent ce formulaire. Le **mineur signe aussi** (ou
+fait connaître son accord) lorsqu'il est en âge de comprendre ; son refus est respecté. Le
+formulaire indique la qualité du signataire (père, mère, tuteur légal). Le droit à l'image d'un
+mineur demande cette autorisation parentale, quel que soit son âge. [À faire confirmer par la
+personne compétente en protection des données.]
 
-## 9. Réclamation
+## 9. Personnes filmées par hasard
 
-Si vous estimez que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la
-**CNIL** (Commission nationale de l'informatique et des libertés), 3 place de Fontenoy, TSA 80715,
-75334 Paris Cedex 07, [www.cnil.fr](https://www.cnil.fr), après avoir contacté le responsable
-du traitement.
+D'autres personnes peuvent apparaître dans le champ de la caméra sans participer (spectateurs,
+joueurs d'un court voisin). Nous **cadrons pour éviter de les filmer** autant que possible. Si l'une
+d'elles le demande, nous **floutons ou coupons** les passages où elle apparaît, ou nous supprimons
+la vidéo. Ces personnes ont les **mêmes droits** que les participants (section 7) et peuvent écrire
+à l'adresse de contact de la section 1.
+
+## 10. Réclamation
+
+Si vous estimez que vos droits ne sont pas respectés, vous pouvez **à tout moment** adresser une
+réclamation à la **CNIL** (Commission nationale de l'informatique et des libertés), 3 place de
+Fontenoy, TSA 80715, 75334 Paris Cedex 07, [www.cnil.fr](https://www.cnil.fr). Contacter d'abord
+le responsable du traitement est possible, mais **n'est pas obligatoire**.
 
 ---
 
-## 10. Signature
+## 11. Signature
 
-Je soussigné(e) **[Nom Prénom]**, né(e) le [date], déclare :
+Je soussigné(e) **[Nom Prénom]**, déclare :
 
+- (mineur uniquement) avoir lu et compris, avec mon parent ou tuteur, ce qui suit, et être d'accord ;
 - avoir lu et compris les informations ci-dessus ;
 - consentir à être filmé(e) pendant le match du **[date du match]** à **[lieu]** ;
 - avoir fait mon choix à la section 6 de mon plein gré ;
 - savoir que je peux retirer mon consentement à tout moment.
 
-Pour une personne mineure : je soussigné(e) **[Nom Prénom du parent ou tuteur]**, agissant en
-qualité de **[père / mère / tuteur légal]** de **[Nom Prénom du mineur]**, consens à son
-filmage dans les mêmes conditions.
+**Mineur (moins de 18 ans) :** [ ] oui  [ ] non (seule cette case est demandée, pas la date de
+naissance).
+
+Si oui : je soussigné(e) **[Nom Prénom du parent ou tuteur]**, agissant en qualité de **[père /
+mère / tuteur légal]** (titulaire de l'autorité parentale) de **[Nom Prénom du mineur]**, autorise
+son filmage dans les mêmes conditions. Le mineur signe également ci-dessous.
 
 | | |
 |---|---|
@@ -136,7 +152,8 @@ filmage dans les mêmes conditions.
 | Pseudonyme attribué dans le jeu | J[00] |
 | Date | [JJ/MM/AAAA] |
 | Lieu | [ville] |
-| Signature | |
+| Signature de la personne filmée | |
+| Signature du titulaire de l'autorité parentale (si mineur) | |
 
 Un exemplaire signé est remis à la personne ; l'original est archivé **hors du dépôt de code**
 (voir [README.md](README.md)).

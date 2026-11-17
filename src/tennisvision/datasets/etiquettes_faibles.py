@@ -56,6 +56,8 @@ _DEHORS = re.compile(
     r"struggles? to keep|misses the (?:court|target)|(?:doesn't|does not) land|beyond|"
     r"into the (?:fence|tarpaulin)"
 )
+# Approche du filet : ce n'est pas une faute de filet
+_APPROCHE_FILET = re.compile(r"\b(?:to|at|approach\w*)\s+(?:the\s+)?net\b")
 _CROISE = re.compile(r"cross[\s-]*court")
 _LIGNE = re.compile(r"down[\s-]*the[\s-]*line")
 
@@ -78,7 +80,7 @@ def analyser_desc(desc: str) -> dict:
         fin = "ace"
     elif _GAGNANT.search(dernier) or "unable to return" in dernier:
         fin = "gagnant"
-    elif _FILET.search(dernier):
+    elif _FILET.search(_APPROCHE_FILET.sub("", dernier)):
         fin = "faute_filet"
     elif _DEHORS.search(dernier):
         fin = "faute_out"

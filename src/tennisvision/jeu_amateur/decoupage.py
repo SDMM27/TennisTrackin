@@ -34,6 +34,23 @@ def _choisir_test(
     return sorted(test)
 
 
+def _lire_splits(fichier: Path) -> dict:
+    """`splits.json` existant ({} s'il n'existe pas) ; ValueError s'il est mal formé."""
+    if not fichier.is_file():
+        return {}
+    try:
+        doc = json.loads(fichier.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise ValueError(f"{fichier} : JSON illisible : {exc}") from exc
+    if not isinstance(doc, dict) or not all(
+        isinstance(v, list) and all(isinstance(m, str) for m in v) for v in doc.values()
+    ):
+        raise ValueError(
+            f"{fichier} : objet {{train, val, test}} de listes de noms de matchs attendu"
+        )
+    return doc
+
+
 def decouper(
     gt_dir: str | Path,
     test_ratio: float = 0.2,
@@ -60,7 +77,7 @@ def decouper(
         raise ValueError(f"Aucun dossier de match dans {gt_dir}")
 
     fichier = gt_dir / NOM_SPLITS
-    existant = json.loads(fichier.read_text(encoding="utf-8")) if fichier.is_file() else {}
+    existant = _lire_splits(fichier)
     test_gele = [] if refaire_test else list(existant.get("test", []))
     rng = random.Random(seed)
     n = len(matchs)

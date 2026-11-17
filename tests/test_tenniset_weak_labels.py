@@ -244,3 +244,36 @@ def test_cli_side_sample_sans_images(data_side, tmp_path):
         ]
     )
     assert code == 0 and sortie.is_file()
+
+
+@pytest.mark.parametrize(
+    ("phrase", "fin"),
+    [
+        (
+            "Good serve, Williams returns, Serena comes to the net and hits a forehand wide.",
+            "faute_out",
+        ),
+        (
+            "Fine serve, Sharapova returns, Serena runs to the net, hits a backhand long.",
+            "faute_out",
+        ),
+        (
+            "Good serve, Sharapova returns, Serena rushes to net but fails to keep a forehand in play.",
+            "faute_out",
+        ),
+        (
+            "Fine serve, Williams returns, Serena approaches the net, a forehand goes out.",
+            "faute_out",
+        ),
+        (
+            "Fast serve, Williams returns, Serena moves closer to net and nets a backhand.",
+            "faute_filet",
+        ),
+        (
+            "Fine serve, Williams returns, Serena comes to the net, smashes a forehand winner.",
+            "gagnant",
+        ),
+    ],
+)
+def test_approche_du_filet_n_est_pas_une_faute_de_filet(phrase, fin):
+    assert analyser_desc(phrase)["fin"] == fin

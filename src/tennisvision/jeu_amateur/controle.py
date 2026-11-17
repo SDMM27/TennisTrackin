@@ -193,7 +193,7 @@ def formater_controle(rapport: dict) -> list[str]:
         if "niveau_constate" in m:
             detail = (
                 f" (niveau {m['niveau_constate']}, {m['hits']} frappes, {m['rebonds']} rebonds, "
-                f"{m['points']} points, {m['balle_frames']} frames de balle)"
+                f"{m['points']} points, {m['balle_frames']} frames balle visibles (interpolées comprises))"
             )
         sortie.append(f"  {etat}  {m['match']}{detail}")
         sortie += [f"      - {e}" for e in m["erreurs"]]

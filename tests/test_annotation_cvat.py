@@ -163,7 +163,7 @@ def test_import_court(match):
     court = json.loads((match / "court.json").read_text(encoding="utf-8"))
     assert court["image_size"] == [1280, 720]
     premier, second = court["segments"]
-    assert (premier["valid_from_frame"], premier["valid_to_frame"]) == (4, 19)
+    assert (premier["valid_from_frame"], premier["valid_to_frame"]) == (0, 19)
     assert (second["valid_from_frame"], second["valid_to_frame"]) == (20, None)
     assert premier["keypoints_px"][:4] == [[400, 200], [880, 200], [150, 650], [1130, 650]]
     assert premier["keypoints_px"][4:] == [None] * 10
@@ -197,7 +197,8 @@ def test_import_evenements(match):
     (net,) = evenements(match, "net")
     assert net["hit_id"] == "hit_0002"
 
-    (rebond,) = evenements(match, "bounce")  # celui de la frame 2 n'a pas de court
+    avant, rebond = evenements(match, "bounce")  # le premier jeu de court vaut dès la frame 0
+    assert (avant["frame_idx"], avant["in_out"], "hit_id" in avant) == (2, "in", False)
     assert (rebond["frame_idx"], rebond["in_out"], rebond["hit_id"]) == (15, "out", "hit_0003")
     assert rebond["image_xy"] == [640, 400]
     court = json.loads((match / "court.json").read_text(encoding="utf-8"))
@@ -233,7 +234,7 @@ def test_import_avertissements_et_rapport(match, capsys):
     texte = "\n".join(resultat.avertissements)
     assert "fin_point (frame 1) sans debut_point" in texte
     assert "deux debut_point de suite (frames 20 et 25)" in texte
-    assert "rebond (frame 2)" in texte and "court_xy" in texte
+    assert "rebonds perdus" not in texte
     assert "service (frame 30) : aucune frappe de P2" in texte
     rapport = json.loads((match / "import_report.json").read_text(encoding="utf-8"))
     assert rapport["avertissements"] == resultat.avertissements
@@ -362,3 +363,84 @@ def test_cli_import_cvat_erreurs(tmp_path, match, capsys):
         assert cli.main(argv) == 2, argv
     err = capsys.readouterr().err
     assert err.count("Erreur :") == 3 and "frames.parquet" in err
+
+
+# --- Revue : rebonds sans court, export partiel, occlusion, ré-import --------------------------
+
+CORPS_COURT = "".join(
+    f'<track id="c{kp}" label="court"><points frame="10" keyframe="1" outside="0" occluded="0" '
+    f'points="{x},{y}"><attribute name="kp">{kp}</attribute></points></track>'
+    for kp, (x, y) in enumerate([(100, 50), (500, 50), (50, 300), (550, 300)])
+)
+REBOND_2 = (
+    '<track id="r" label="rebond"><points frame="2" keyframe="1" outside="0" occluded="0" '
+    'points="200,200"><attribute name="in_out">in</attribute></points></track>'
+)
+
+
+def test_rebond_avant_le_premier_jeu_de_court_garde(tmp_path, match):
+    importer_xml(tmp_path, match, CORPS_COURT + REBOND_2)
+    court = json.loads((match / "court.json").read_text(encoding="utf-8"))
+    assert court["segments"][0]["valid_from_frame"] == 0  # annoté à la frame 10
+    (rebond,) = evenements(match, "bounce")
+    assert rebond["frame_idx"] == 2
+
+
+def test_rebonds_sans_aucun_court_erreur(tmp_path, match):
+    with pytest.raises(ValueError, match="14 repères"):
+        importer_xml(tmp_path, match, REBOND_2)
+    assert sorted(p.name for p in match.iterdir()) == ["frames.parquet"]
+
+
+def test_rebond_perdu_resume_et_rapport(tmp_path, match, monkeypatch):
+    from tennisvision.annotation import importeur
+
+    monkeypatch.setattr(importeur, "_projeter", lambda *a: None)
+    frappe = '<tag frame="1" label="frappe"><attribute name="joueur">P1</attribute></tag>'
+    resultat = importer_xml(tmp_path, match, CORPS_COURT + REBOND_2 + frappe)
+    assert "1 rebonds perdus (pas de calibration du court) : frames 2" in resultat.avertissements
+    rapport = json.loads((match / "import_report.json").read_text(encoding="utf-8"))
+    assert rapport["rebonds_perdus"] == [2]
+
+
+@pytest.mark.parametrize(
+    "meta", ["<start_frame>5</start_frame>", "<frame_filter>step=2</frame_filter>"]
+)
+def test_export_partiel_refuse(tmp_path, match, meta):
+    export = tmp_path / "p.xml"
+    export.write_text(
+        xml('<tag frame="3" label="debut_point"/>').replace("<task>", f"<task>{meta}"),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="toute la vidéo"):
+        importer_cvat(export, match)
+
+
+def test_balle_occluded_invisible(tmp_path, match):
+    corps = (
+        '<track id="0" label="balle">'
+        '<points frame="1" keyframe="1" outside="0" occluded="0" points="10,10"/>'
+        '<points frame="2" keyframe="1" outside="0" occluded="1" points="12,12"/>'
+        '<points frame="3" keyframe="1" outside="0" occluded="0" points="14,14"/></track>'
+    )
+    importer_xml(tmp_path, match, corps)
+    assert [(r["frame_idx"], r["visible"], r["x"]) for r in lire_ball(match)] == [
+        ("1", "1", "10.0"),
+        ("2", "0", ""),
+        ("3", "1", "14.0"),
+    ]
+
+
+def test_reimport_supprime_les_fichiers_perimes(tmp_path, match):
+    importer_cvat(EXPORT, match)
+    assert (match / "ball.csv").is_file() and (match / "court.json").is_file()
+    corps = (
+        '<tag frame="3" label="debut_point"/>'
+        '<tag frame="9" label="fin_point"><attribute name="gagnant">P1</attribute></tag>'
+    )
+    resultat = importer_xml(tmp_path, match, corps)
+    assert set(resultat.supprimes) == {"ball.csv", "court.json"}
+    assert not (match / "ball.csv").exists() and not (match / "court.json").exists()
+    rapport = json.loads((match / "import_report.json").read_text(encoding="utf-8"))
+    assert sorted(rapport["fichiers_supprimes"]) == ["ball.csv", "court.json"]
+    assert any("supprimé" in a for a in resultat.avertissements)

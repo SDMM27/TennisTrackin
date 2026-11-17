@@ -17,6 +17,7 @@ class PointCVAT:
     y: float
     keyframe: bool
     outside: bool
+    occluded: bool = False
     attributs: dict[str, str] = field(default_factory=dict)
 
 
@@ -79,6 +80,7 @@ def _point(element: ET.Element, frame: int | None = None) -> PointCVAT:
         y=y,
         keyframe=element.get("keyframe", "1") == "1",
         outside=element.get("outside", "0") == "1",
+        occluded=element.get("occluded", "0") == "1",
         attributs=_attributs(element),
     )
 
@@ -97,6 +99,15 @@ def lire_export(chemin: str | Path) -> ExportCVAT:
         raise ValueError(
             f"{chemin.name} : export au format « CVAT for images » ; "
             "exporter au format « CVAT for video 1.1 »"
+        )
+
+    debut = (racine.findtext(".//task/start_frame") or "0").strip()
+    filtre = (racine.findtext(".//task/frame_filter") or "").strip()
+    if debut not in ("", "0") or filtre:
+        raise ValueError(
+            f"{chemin.name} : l'export ne couvre pas toute la vidéo (start_frame = {debut}, "
+            f"frame_filter = {filtre!r}) ; les numéros de frame ne correspondraient plus à "
+            "frames.parquet. Exporter la vidéo entière, sans pas de frames."
         )
 
     try:

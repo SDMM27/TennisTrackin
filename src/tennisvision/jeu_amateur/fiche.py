@@ -1,5 +1,6 @@
 """Bloc de statistiques automatiques de la fiche descriptive du jeu (`docs/dataset_card.md`)."""
 
+import json
 from collections import Counter
 from pathlib import Path
 
@@ -14,6 +15,15 @@ ENTETE_DEFAUT = "# Fiche descriptive du jeu de données amateur\n\n"
 def _repartition(valeurs: list[str]) -> str:
     comptes = Counter(v or "non renseigné" for v in valeurs)
     return ", ".join(f"{cle} : {n}" for cle, n in sorted(comptes.items())) or "aucun"
+
+
+def _matchs_test(gt_dir: Path) -> str:
+    """Matchs du test gelé, d'après `splits.json` (noms de matchs, pas de joueurs)."""
+    try:
+        test = json.loads((gt_dir / "splits.json").read_text(encoding="utf-8")).get("test", [])
+    except (OSError, ValueError, AttributeError):
+        return "splits.json absent ou illisible"
+    return ", ".join(sorted(str(m) for m in test)) or "aucun (test non encore tiré)"
 
 
 def bloc_statistiques(gt_dir: str | Path) -> str:
@@ -46,11 +56,12 @@ def bloc_statistiques(gt_dir: str | Path) -> str:
             + _repartition([ligne["niveau_annotation"] for ligne in lignes]),
             f"- Licences : {_repartition([ligne['licence'] for ligne in lignes])}",
             f"- Matchs doublement annotés : {doubles}",
+            f"- Matchs du test gelé : {_matchs_test(gt_dir)}",
             f"- Points annotés : {totaux['points']}",
             f"- Services annotés : {totaux['services']}",
             f"- Frappes annotées : {totaux['hits']}",
             f"- Rebonds annotés : {totaux['rebonds']}",
-            f"- Frames de balle annotées : {totaux['balle_frames']}",
+            f"- Frames de balle visibles (interpolées comprises) : {totaux['balle_frames']}",
         ]
     )
 

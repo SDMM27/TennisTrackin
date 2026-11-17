@@ -35,6 +35,7 @@ class ResultatImport:
     fichiers: list[str]
     comptes: dict[str, int]
     avertissements: list[str] = field(default_factory=list)
+    supprimes: list[str] = field(default_factory=list)
 
 
 # --- Temps ---------------------------------------------------------------------------------
@@ -76,7 +77,8 @@ def _entrees_balle(pistes: list[Piste], avert: list[str]) -> dict[int, tuple]:
                     f"balle : frame {p.frame} couverte par deux pistes, la première est gardée"
                 )
                 continue
-            entrees[p.frame] = (p.x, p.y, visible_courant and not p.outside, p.keyframe)
+            visible = visible_courant and not p.outside and not p.occluded
+            entrees[p.frame] = (p.x, p.y, visible, p.keyframe)
     return entrees
 
 
@@ -183,10 +185,12 @@ def construire_court(
                 "source": "annotation",
             }
         )
-    for courant, suivant in itertools.pairwise(segments):
-        courant["valid_to_frame"] = suivant["valid_from_frame"] - 1
     if not segments:
         return None
+    for courant, suivant in itertools.pairwise(segments):
+        courant["valid_to_frame"] = suivant["valid_from_frame"] - 1
+    # Caméra supposée fixe jusqu'au premier déplacement : le premier jeu vaut dès la frame 0
+    segments[0]["valid_from_frame"] = 0
     return {"schema_version": "1.0", "image_size": list(taille), "segments": segments}
 
 
@@ -207,6 +211,7 @@ class _Evenements:
     def __init__(self, temps: list[float], court: dict | None, avert: list[str]):
         self.temps, self.court, self.avert = temps, court, avert
         self.evenements: list[dict] = []
+        self.perdus: list[int] = []  # rebonds sans calibration
         self.compteurs: dict[str, int] = {}
 
     def _t(self, frame: int, contexte: str) -> float | None:
@@ -300,6 +305,7 @@ class _Evenements:
                 contexte = f"rebond (frame {p.frame})"
                 seg = _segment(self.court, p.frame)
                 if seg is None:
+                    self.perdus.append(p.frame)
                     self.avert.append(
                         f"{contexte} : aucun segment de court ne couvre cette frame ; le contrat "
                         "exige court_xy, rebond ignoré"
@@ -307,6 +313,7 @@ class _Evenements:
                     continue
                 projete = _projeter(np.array(seg["homography"]), p.x, p.y)
                 if projete is None:
+                    self.perdus.append(p.frame)
                     self.avert.append(f"{contexte} : projection impossible, rebond ignoré")
                     continue
                 valeur = in_out if in_out in L.IN_OUT else "too_close"
@@ -521,7 +528,21 @@ def importer_cvat(
     frappes = evts.frappes(_tags(donnees, L.FRAPPE))
     tags_service = _tags(donnees, L.SERVICE)
     evts.services(tags_service, bool(frappes))
-    evts.rebonds(_pistes(donnees, L.REBOND))
+    pistes_rebonds = _pistes(donnees, L.REBOND)
+    if court is None and any(
+        not p.outside and p.keyframe for piste in pistes_rebonds for p in piste.points
+    ):
+        raise ValueError(
+            "l'export contient des rebonds mais aucun repère de court exploitable : placer "
+            "d'abord les 14 repères `court` (4 au minimum), le contrat exige la position au sol"
+        )
+    evts.rebonds(pistes_rebonds)
+    if evts.perdus:
+        frames_perdues = ", ".join(str(f) for f in sorted(evts.perdus))
+        avert.append(
+            f"{len(evts.perdus)} rebonds perdus (pas de calibration du court) : "
+            f"frames {frames_perdues}"
+        )
     evts.filets(_tags(donnees, L.FILET))
     evts.points_et_jeux(
         _tags(donnees, L.DEBUT_POINT),
@@ -574,6 +595,15 @@ def importer_cvat(
             )
         for nom in produits:
             shutil.copyfile(provisoire / nom, dossier / nom)
+        # Ré-import : un fichier d'un import précédent que cet export ne produit plus serait périmé
+        supprimes = [
+            n
+            for n in ("ball.csv", "court.json", "events.json")
+            if n not in produits and (dossier / n).is_file()
+        ]
+        for nom in supprimes:
+            (dossier / nom).unlink()
+            avert.append(f"{nom} d'un import précédent supprimé (absent de cet export)")
 
     rapport = {
         "export": Path(export).name,
@@ -581,7 +611,9 @@ def importer_cvat(
         "niveau_annotation": niveau,
         "fichiers": sorted(produits),
         "comptes": comptes,
+        "fichiers_supprimes": supprimes,
+        "rebonds_perdus": sorted(evts.perdus),
         "avertissements": avert,
     }
     _ecrire_json(dossier / NOM_RAPPORT, rapport)
-    return ResultatImport(niveau, sorted(produits), comptes, avert)
+    return ResultatImport(niveau, sorted(produits), comptes, avert, supprimes)
