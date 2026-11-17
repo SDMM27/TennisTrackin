@@ -60,5 +60,11 @@ def charger_reseau(
             )
         architecture = architecture_du_registre(nom_ou_chemin)
     reseau = construire_reseau(architecture)
-    reseau.load_state_dict(_etat(chemin), strict=True)
+    try:
+        reseau.load_state_dict(_etat(chemin), strict=True)
+    except RuntimeError as exc:
+        raise ValueError(
+            f"poids {nom_ou_chemin} incompatibles avec l'architecture {architecture} "
+            f"({', '.join(ARCHITECTURES)}) : {str(exc).splitlines()[0]}"
+        ) from exc
     return reseau.to(device).eval(), decrire_modele(nom_ou_chemin)

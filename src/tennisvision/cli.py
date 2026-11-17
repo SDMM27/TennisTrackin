@@ -207,7 +207,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_pull = sub_mod.add_parser(
         "pull", parents=[commun], help="télécharge des modèles dans le cache"
     )
-    p_pull.add_argument("noms", nargs="*", metavar="NOM", help=f"défaut : {DEFAULT_MODEL}")
+    p_pull.add_argument(
+        "noms",
+        nargs="*",
+        metavar="NOM",
+        help=f"défaut : les modèles d'analyze ({DEFAULT_MODEL}, {MODELE_BALLE_DEFAUT})",
+    )
     p_imp = sub_mod.add_parser(
         "import", parents=[commun], help="importe un fichier de poids local dans le cache"
     )
@@ -568,7 +573,7 @@ def _models(args: argparse.Namespace) -> None:
             etat = "présent" if chemin_modele(nom, args.models_dir).is_file() else "absent"
             print(f"{nom}  v{ref.version}  {ref.licence}  {etat}  {ref.description}")
     elif args.action == "pull":
-        for nom in args.noms or [DEFAULT_MODEL]:
+        for nom in args.noms or [DEFAULT_MODEL, MODELE_BALLE_DEFAUT]:
             print(f"{nom} : {telecharger(nom, args.models_dir)}")
     else:
         print(f"{args.nom} : {importer(args.nom, args.fichier, args.models_dir)}")

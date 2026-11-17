@@ -47,6 +47,9 @@ hors-ligne) :
 tennisvision models pull
 ```
 
+Sans argument, la commande récupère les modèles utilisés par défaut par `analyze` : YOLO
+(joueurs) et `wasb_tennis` (balle).
+
 ### Variables d'environnement
 
 Chaque dossier se résout dans l'ordre : option de la commande, variable d'environnement, valeur

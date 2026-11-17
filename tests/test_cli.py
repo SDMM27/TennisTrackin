@@ -394,7 +394,7 @@ def test_models_list_absent_puis_present(registre_test, tmp_path, capsys):
     assert str(cache) in sortie and "yolo11n" in sortie and "MIT" in sortie
     assert "absent" in sortie
 
-    assert cli.main(["models", "pull", "--models-dir", str(cache)]) == 0
+    assert cli.main(["models", "pull", "yolo11n", "--models-dir", str(cache)]) == 0
     assert (cache / "yolo11n.pt").read_bytes() == CONTENU
     capsys.readouterr()
     assert cli.main(["models", "list", "--models-dir", str(cache)]) == 0
@@ -409,8 +409,15 @@ def test_models_pull_nom_explicite(registre_test, tmp_path):
 
 def test_models_pull_utilise_la_variable_d_environnement(registre_test, tmp_path, monkeypatch):
     monkeypatch.setenv(config.ENV_MODELS_DIR, str(tmp_path / "env"))
-    assert cli.main(["models", "pull"]) == 0
+    assert cli.main(["models", "pull", "yolo11n"]) == 0
     assert (tmp_path / "env" / "yolo11n.pt").is_file()
+
+
+def test_models_pull_sans_argument_recupere_les_modeles_d_analyze(monkeypatch, tmp_path):
+    demandes = []
+    monkeypatch.setattr(cli, "telecharger", lambda nom, dossier: demandes.append(nom) or tmp_path)
+    assert cli.main(["models", "pull"]) == 0
+    assert demandes == ["yolo11n", "wasb_tennis"]
 
 
 def test_models_pull_modele_inconnu(registre_test, tmp_path, capsys):
