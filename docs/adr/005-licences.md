@@ -51,6 +51,8 @@ Ce qui **n'est pas encore vérifié** (PLAN_AMELIORATION.md § 8) :
 - la licence du jeu TrackNet et des poids TrackNetV3 et WASB ;
 - la licence des poids YOLO téléchargés par ultralytics ;
 - le statut juridique des vidéos de diffusion contenues dans TenniSet.
+- la licence de la partie U-Net de `balle/reseaux/unet.py`, issue de milesial/Pytorch-UNet
+  (GPL-3.0 aujourd'hui) via WASB-SBDT (MIT) ; voir `THIRD_PARTY_NOTICES.md` (Lot 4).
 
 ## Références
 

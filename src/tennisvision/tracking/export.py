@@ -58,7 +58,7 @@ def summarize(
     n_frames_traitees: int,
     t_range_ms: tuple[float, float],
 ) -> dict:
-    """Résume une analyse sur l'intervalle de frames [début, fin] (inclus).
+    """Résume les personnes suivies sur l'intervalle de frames [début, fin] (inclus).
 
     `n_frames_traitees` est le nombre de frames réellement traitées ; `t_range_ms` les t_ms de
     la première et de la dernière frame traitées (la durée vient de leur différence).
@@ -69,9 +69,6 @@ def summarize(
     personnes = df[(df["label"] == "person") & df["track_id"].notna()]
     par_identite = personnes.groupby("track_id")["frame_idx"].nunique()
     top = par_identite.sort_values(ascending=False, kind="stable").head(5)
-
-    balles = df[df["label"] == "ball"]
-    frames_balle = balles["frame_idx"].nunique()
 
     return {
         "video": video_info.path.name,
@@ -84,6 +81,4 @@ def summarize(
         "n_frames_traitees": n_frames_traitees,
         "n_identites": int(par_identite.size),
         "top_identites": [{"track_id": int(tid), "n_frames": int(n)} for tid, n in top.items()],
-        "n_detections_balle": len(balles),
-        "taux_detection_balle": frames_balle / n_frames_traitees if n_frames_traitees else 0.0,
     }

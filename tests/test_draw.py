@@ -70,6 +70,31 @@ def test_draw_frame_copie_et_pixels_jaunes_seulement_sur_la_trainee():
     assert not jaune[:, 60:150].any()  # rien entre les deux segments
 
 
+def test_position_interpolee_dessinee_en_cercle_creux():
+    trail = BallTrail()
+    trail.update(5, (100, 50), interpole=True)
+    assert trail.current() == (100, 50) and trail.courant_interpole()
+    creux = draw_frame(_image(), [], trail, 5)
+    trail.update(6, (100, 50))
+    assert not trail.courant_interpole()
+    plein = draw_frame(_image(), [], trail, 6)
+    assert not _est_jaune(creux)[50, 100]  # centre non rempli
+    assert _est_jaune(creux)[50, 106]  # anneau
+    assert _est_jaune(plein)[50, 100]
+
+
+def test_courant_interpole_faux_sans_balle():
+    trail = BallTrail()
+    trail.update(0, (10, 10), interpole=True)
+    trail.update(1, None)
+    assert not trail.courant_interpole()
+
+
+def test_draw_frame_ne_dessine_pas_les_boites_de_balle():
+    sortie = draw_frame(_image(), [_balle(1, 100, 50)], BallTrail(), 1)
+    assert np.array_equal(sortie[30:], _image()[30:])
+
+
 def test_texte_bandeau_avec_temps_reel():
     assert _texte_bandeau(10, 61234.0) == "Frame 10  01:01.2"
 

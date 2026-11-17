@@ -1,6 +1,7 @@
 """Interface en ligne de commande.
 
-Commandes : `analyze`, `clip`, `tenniset`, `models`, `validate`, `eval`, `annotation`, `dataset`.
+Commandes : `analyze`, `clip`, `tenniset`, `models`, `ball`, `validate`, `eval`, `annotation`,
+`dataset`.
 """
 
 import argparse
@@ -23,8 +24,10 @@ from tennisvision.eval.banc import (
 from tennisvision.io.video import cut_clip
 from tennisvision.jeu_amateur import accord, controle, decoupage, fiche
 from tennisvision.models import chemin_modele, importer, registre, telecharger
-from tennisvision.pipeline import analyze
+from tennisvision.pipeline import MODELE_BALLE_DEFAUT, SANS_BALLE, analyze
 from tennisvision.validate import valider_dossier, valider_fichier
+
+ARCHITECTURES = ("hrnet", "unet")  # comme tennisvision.balle.reseaux (sans importer torch ici)
 
 
 class ErreurUsage(Exception):
@@ -38,6 +41,36 @@ def _ajouter_intervalle(parser: argparse.ArgumentParser) -> None:
 
 def _ajouter_verbose(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-v", "--verbose", action="store_true", help="logs détaillés")
+
+
+def _ajouter_architecture_balle(parser: argparse.ArgumentParser, option: str) -> None:
+    parser.add_argument(
+        option,
+        dest="architecture_balle",
+        choices=ARCHITECTURES,
+        help="architecture du modèle de balle ; obligatoire pour un fichier de poids local",
+    )
+
+
+def _ajouter_options_masque(parser: argparse.ArgumentParser, option_seuil: str) -> None:
+    """Seuil de score de la balle, `--court` et `--mask` (communs à `analyze` et `ball track`)."""
+    parser.add_argument(
+        option_seuil,
+        dest="seuil_balle",
+        type=float,
+        default=0.5,
+        help="seuil de score des candidats balle, de 0 à 1 (défaut : 0.5)",
+    )
+    parser.add_argument(
+        "--court",
+        type=Path,
+        help="court.json : ignore les candidats balle hors du court étendu (exclusif de --mask)",
+    )
+    parser.add_argument(
+        "--mask",
+        type=Path,
+        help='polygone manuel {"polygone": [[x, y], ...]} en pixels (exclusif de --court)',
+    )
 
 
 def _ajouter_options_analyse(parser: argparse.ArgumentParser) -> None:
@@ -68,6 +101,16 @@ def _ajouter_options_analyse(parser: argparse.ArgumentParser) -> None:
         help=f"taille d'inférence YOLO, en px (défaut : {DEFAULT_IMGSZ})",
     )
     parser.add_argument("--device", help="périphérique de calcul, ex. cpu ou 0")
+    parser.add_argument(
+        "--ball-model",
+        default=MODELE_BALLE_DEFAUT,
+        help=(
+            f"nom du registre ou chemin de poids du modèle de balle (défaut : "
+            f"{MODELE_BALLE_DEFAUT} ; « {SANS_BALLE} » désactive la balle)"
+        ),
+    )
+    _ajouter_architecture_balle(parser, "--ball-architecture")
+    _ajouter_options_masque(parser, "--ball-threshold")
     parser.add_argument("--no-video", action="store_true", help="ne pas écrire la vidéo annotée")
     _ajouter_verbose(parser)
 
@@ -164,12 +207,115 @@ def build_parser() -> argparse.ArgumentParser:
     p_pull = sub_mod.add_parser(
         "pull", parents=[commun], help="télécharge des modèles dans le cache"
     )
-    p_pull.add_argument("noms", nargs="*", metavar="NOM", help=f"défaut : {DEFAULT_MODEL}")
+    p_pull.add_argument(
+        "noms",
+        nargs="*",
+        metavar="NOM",
+        help=f"défaut : les modèles d'analyze ({DEFAULT_MODEL}, {MODELE_BALLE_DEFAUT})",
+    )
     p_imp = sub_mod.add_parser(
         "import", parents=[commun], help="importe un fichier de poids local dans le cache"
     )
     p_imp.add_argument("nom", metavar="NOM", help="nom du modèle dans le registre")
     p_imp.add_argument("fichier", type=Path, help="fichier de poids à importer")
+
+    p_ball = sub.add_parser("ball", help="suivi de la balle : trajectoire, débit, export ONNX")
+    sub_ball = p_ball.add_subparsers(dest="action", required=True)
+    p_track = sub_ball.add_parser(
+        "track", help="suit la balle seule (ball.csv et summary.json, sans YOLO)"
+    )
+    p_track.add_argument("video", type=Path, help="chemin de la vidéo")
+    _ajouter_intervalle(p_track)
+    p_track.add_argument(
+        "--output-dir", type=Path, help="dossier de sortie (défaut : comme analyze)"
+    )
+    p_track.add_argument(
+        "--model",
+        default=MODELE_BALLE_DEFAUT,
+        help=f"nom du registre ou chemin de poids (défaut : {MODELE_BALLE_DEFAUT})",
+    )
+    p_track.add_argument("--device", help="périphérique de calcul, ex. cpu ou 0")
+    _ajouter_architecture_balle(p_track, "--ball-architecture")
+    _ajouter_options_masque(p_track, "--threshold")
+    _ajouter_verbose(p_track)
+    p_bench = sub_ball.add_parser("bench", help="mesure le débit du détecteur (JSON)")
+    p_bench.add_argument(
+        "--model", default=MODELE_BALLE_DEFAUT, help=f"modèle (défaut : {MODELE_BALLE_DEFAUT})"
+    )
+    p_bench.add_argument("--device", help="périphérique de calcul, ex. cpu ou 0")
+    _ajouter_architecture_balle(p_bench, "--architecture")
+    p_bench.add_argument("--batch", type=int, default=4, help="triplets par lot (défaut : 4)")
+    p_bench.add_argument("--triplets", type=int, default=8, help="triplets mesurés (défaut : 8)")
+    _ajouter_verbose(p_bench)
+    p_train = sub_ball.add_parser(
+        "train", help="affine un modèle de balle (best.pth et entrainement.json)"
+    )
+    p_train.add_argument(
+        "--source",
+        action="append",
+        required=True,
+        metavar="FORMAT:CHEMIN",
+        help="données : tracknet:<racine> ou amateur:<gt_dir> (répétable)",
+    )
+    p_train.add_argument("--output-dir", type=Path, required=True, help="dossier de sortie")
+    p_train.add_argument(
+        "--architecture", choices=ARCHITECTURES, default="hrnet", help="défaut : hrnet"
+    )
+    p_train.add_argument(
+        "--init",
+        default="wasb_tennis",
+        help="poids initiaux : nom du registre ou chemin (défaut : wasb_tennis ; « aucun » : aléatoire)",
+    )
+    p_train.add_argument("--epochs", type=int, default=10, help="époques (défaut : 10)")
+    p_train.add_argument("--batch", type=int, default=8, help="triplets par lot (défaut : 8)")
+    p_train.add_argument(
+        "--lr", type=float, default=1e-3, help="taux d'apprentissage (défaut : 0.001)"
+    )
+    p_train.add_argument("--device", help="périphérique de calcul, ex. cpu ou 0")
+    p_train.add_argument("--seed", type=int, default=0, help="graine (défaut : 0)")
+    p_train.add_argument(
+        "--val-fraction",
+        type=float,
+        default=0.1,
+        help="part de validation des sources TrackNet (défaut : 0.1) ; le jeu amateur suit splits.json",
+    )
+    p_train.add_argument(
+        "--temporal-step",
+        type=int,
+        default=1,
+        help="pas entre les images d'un triplet : 2 pour du 60 fps (défaut : 1)",
+    )
+    p_train.add_argument(
+        "--workers", type=int, default=0, help="processus de chargement (défaut : 0)"
+    )
+    p_train.add_argument(
+        "--cache-dir",
+        type=Path,
+        help="cache des images décodées (défaut : <output-dir>/cache_frames)",
+    )
+    p_train.add_argument(
+        "--videos-dir",
+        type=Path,
+        help="dossier des vidéos du jeu amateur (défaut : dossier du match)",
+    )
+    p_train.add_argument(
+        "--no-interpolated",
+        action="store_true",
+        help="écarte les positions interpolées de ball.csv (jeu amateur)",
+    )
+    p_train.add_argument(
+        "--no-augmentation", action="store_true", help="désactive les augmentations"
+    )
+    p_train.add_argument("--max-batches", type=int, help="lots par époque au plus (essais rapides)")
+    _ajouter_verbose(p_train)
+    p_onnx = sub_ball.add_parser("export-onnx", help="exporte un modèle de balle en ONNX")
+    p_onnx.add_argument("output", metavar="OUTPUT", type=Path, help="fichier .onnx de sortie")
+    p_onnx.add_argument(
+        "--model", default=MODELE_BALLE_DEFAUT, help=f"modèle (défaut : {MODELE_BALLE_DEFAUT})"
+    )
+    _ajouter_architecture_balle(p_onnx, "--architecture")
+    p_onnx.add_argument("--opset", type=int, default=17, help="version d'opset ONNX (défaut : 17)")
+    _ajouter_verbose(p_onnx)
 
     p_ann = sub.add_parser("annotation", help="outils d'annotation de la vérité terrain")
     sub_ann = p_ann.add_subparsers(dest="action", required=True)
@@ -246,6 +392,19 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _afficher_balle(balle: dict | None) -> None:
+    if balle is None:
+        print("Balle : désactivée")
+        return
+    modele = balle["modele"]
+    nom = "inconnu" if modele is None else modele["nom"]
+    print(
+        f"Balle ({nom}, seuil {balle['seuil_score']}) : visible sur "
+        f"{balle['taux_visible'] * 100:.1f} % des frames "
+        f"({balle['n_detectes']} détectées, {balle['n_interpoles']} interpolées)"
+    )
+
+
 def _afficher_resume(resume: dict) -> None:
     debut, fin = resume["intervalle"]
     largeur, hauteur = resume["resolution"]
@@ -255,17 +414,16 @@ def _afficher_resume(resume: dict) -> None:
     )
     print(f"Intervalle : frames {debut} à {fin} ({resume['duree_ms'] / 1000:.2f} s)")
     print(f"Frames traitées : {resume['n_frames_traitees']}")
-    # Pas encore de filtre « sur le court » : arbitres, ramasseurs et public sont comptés
-    print(f"Identités « personne » (joueurs, arbitres, public…) : {resume['n_identites']}")
-    for ident in resume["top_identites"]:
-        print(f"  - ID {ident['track_id']} : {ident['n_frames']} frames")
-    print(
-        f"Balle (brut, faux positifs inclus) : {resume['taux_detection_balle'] * 100:.1f} % "
-        f"des frames ({resume['n_detections_balle']} détections)"
-    )
     modele = resume["modele"]
-    version = f" v{modele['version']}" if modele["version"] else ""
-    print(f"Modèle : {modele['nom']}{version} (sha256 {modele['sha256'][:12]}...)")
+    if modele is not None:  # absent pour `ball track` (pas de suivi des personnes)
+        # Pas encore de filtre « sur le court » : arbitres, ramasseurs et public sont comptés
+        print(f"Identités « personne » (joueurs, arbitres, public…) : {resume['n_identites']}")
+        for ident in resume["top_identites"]:
+            print(f"  - ID {ident['track_id']} : {ident['n_frames']} frames")
+    _afficher_balle(resume["balle"])
+    if modele is not None:
+        version = f" v{modele['version']}" if modele["version"] else ""
+        print(f"Modèle : {modele['nom']}{version} (sha256 {modele['sha256'][:12]}...)")
     print(f"Vitesse de traitement : {resume['fps_traitement']:.1f} fps")
     print(f"Sorties : {resume['dossier']}")
     for fichier in resume["sorties"].values():
@@ -314,8 +472,84 @@ def _analyser(args: argparse.Namespace, video: Path, start: int, end: int | None
         imgsz=args.imgsz,
         write_video=not args.no_video,
         match=args.match,
+        modele_balle=args.ball_model,
+        seuil_balle=args.seuil_balle,
+        court=args.court,
+        masque=args.mask,
+        architecture_balle=args.architecture_balle,
     )
     _afficher_resume(resume)
+
+
+def _balle(args: argparse.Namespace) -> None:
+    if args.action == "track":
+        resume = analyze(
+            args.video,
+            output_dir=args.output_dir,
+            start=args.start or 0,
+            end=args.end,
+            device=args.device,
+            write_video=False,
+            modele_balle=args.model,
+            seuil_balle=args.seuil_balle,
+            court=args.court,
+            masque=args.mask,
+            personnes=False,
+            architecture_balle=args.architecture_balle,
+        )
+        _afficher_resume(resume)
+        return
+    if args.action == "train":
+        _entrainer(args)
+        return
+    from tennisvision.balle import export
+
+    try:
+        if args.action == "bench":
+            resultat = export.mesurer_debit(
+                args.model,
+                args.device,
+                n_triplets=args.triplets,
+                taille_lot=args.batch,
+                architecture=args.architecture_balle,
+            )
+            print(json.dumps(resultat, indent=2, ensure_ascii=False))
+        else:
+            chemin = export.exporter_onnx(
+                args.model, args.output, architecture=args.architecture_balle, opset=args.opset
+            )
+            print(f"Modèle exporté : {chemin}")
+    except ImportError as exc:  # dépendances optionnelles manquantes
+        raise ErreurUsage(str(exc)) from exc
+
+
+def _entrainer(args: argparse.Namespace) -> None:
+    from tennisvision.balle.augmentations import ParametresAugmentation
+    from tennisvision.balle.entrainement import ConfigEntrainement, entrainer
+
+    augmentation = ParametresAugmentation()
+    if args.no_augmentation:
+        augmentation = augmentation.desactivees()
+    config_entrainement = ConfigEntrainement(
+        sources=tuple(args.source),
+        dossier_sortie=args.output_dir,
+        architecture=args.architecture,
+        poids_initiaux=None if args.init.lower() == SANS_BALLE else args.init,
+        epochs=args.epochs,
+        taille_lot=args.batch,
+        lr=args.lr,
+        device=args.device,
+        graine=args.seed,
+        fraction_validation=args.val_fraction,
+        pas_temporel=args.temporal_step,
+        nb_workers=args.workers,
+        max_lots=args.max_batches,
+        dossier_cache=args.cache_dir,
+        videos_dir=args.videos_dir,
+        interpolees=not args.no_interpolated,
+        augmentation=augmentation,
+    )
+    print(f"Meilleur modèle : {entrainer(config_entrainement)}")
 
 
 def _decouper(video: Path, sortie: Path, start: int, end: int | None) -> None:
@@ -339,7 +573,7 @@ def _models(args: argparse.Namespace) -> None:
             etat = "présent" if chemin_modele(nom, args.models_dir).is_file() else "absent"
             print(f"{nom}  v{ref.version}  {ref.licence}  {etat}  {ref.description}")
     elif args.action == "pull":
-        for nom in args.noms or [DEFAULT_MODEL]:
+        for nom in args.noms or [DEFAULT_MODEL, MODELE_BALLE_DEFAUT]:
             print(f"{nom} : {telecharger(nom, args.models_dir)}")
     else:
         print(f"{args.nom} : {importer(args.nom, args.fichier, args.models_dir)}")
@@ -466,6 +700,9 @@ def _executer(args: argparse.Namespace) -> int:
     if args.commande == "dataset":
         _dataset(args)
         return 0
+    if args.commande == "ball":
+        _balle(args)
+        return 0
     if args.commande == "models":
         _models(args)
     elif args.commande == "tenniset" and args.action == "export-events":
@@ -496,7 +733,8 @@ def main(argv: list[str] | None = None) -> int:
     (`validate`), 2 erreur d'argument ou de fichier (chemin introuvable, JSON ou CSV illisible ou
     de structure invalide — le message nomme le fichier —, `--gt-dir` manquant ou
     split absent de `splits.json` (`eval`), aucune annotation TenniSet,
-    bornes ou `match.json` invalides, point TenniSet inconnu, modèle absent du cache — le message
+    bornes ou `match.json` invalides, `--court` et `--mask` donnés ensemble, point TenniSet inconnu,
+    modèle (YOLO ou balle) absent du cache — le message
     indique `models pull` —, téléchargement ou import de modèle en échec, dossier sans fichier de
     contrat…).
     """
