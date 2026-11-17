@@ -122,3 +122,28 @@ def video_tournee(tmp_path: Path, ffmpeg: str):
         return sortie
 
     return fabrique
+
+
+@pytest.fixture
+def evenement():
+    """Fabrique d'événements `events.json` minimaux : `evenement("hit", 10, player_id="P1")`."""
+    compteur = iter(range(10_000))
+
+    def fabrique(type_: str, frame: int, **champs) -> dict:
+        return {
+            "id": f"e{next(compteur)}",
+            "type": type_,
+            "t_ms": frame * 40.0,
+            "frame_idx": frame,
+            "confidence": None,
+            "source": "annotation",
+            **champs,
+        }
+
+    return fabrique
+
+
+@pytest.fixture
+def doc_events():
+    """Enveloppe une liste d'événements dans un document `events.json`."""
+    return lambda *evenements: {"schema_version": "1.0", "events": list(evenements)}
