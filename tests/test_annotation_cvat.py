@@ -425,7 +425,9 @@ def test_export_complet_accepte(tmp_path, match, meta):
         xml('<tag frame="3" label="debut_point"/>').replace("<task>", f"<task>{meta}"),
         encoding="utf-8",
     )
-    importer_cvat(export, match)
+    # L'export complet passe le contrôle de couverture ; il échoue plus loin (niveau 0).
+    with pytest.raises(ValueError, match="niveau 0"):
+        importer_cvat(export, match)
 
 
 def test_balle_occluded_invisible(tmp_path, match):
