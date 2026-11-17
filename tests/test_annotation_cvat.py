@@ -416,6 +416,18 @@ def test_export_partiel_refuse(tmp_path, match, meta):
         importer_cvat(export, match)
 
 
+@pytest.mark.parametrize(
+    "meta", ["<start_frame>0</start_frame>", "<frame_filter>step=1</frame_filter>"]
+)
+def test_export_complet_accepte(tmp_path, match, meta):
+    export = tmp_path / "c.xml"
+    export.write_text(
+        xml('<tag frame="3" label="debut_point"/>').replace("<task>", f"<task>{meta}"),
+        encoding="utf-8",
+    )
+    importer_cvat(export, match)
+
+
 def test_balle_occluded_invisible(tmp_path, match):
     corps = (
         '<track id="0" label="balle">'

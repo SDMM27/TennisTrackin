@@ -103,7 +103,8 @@ def lire_export(chemin: str | Path) -> ExportCVAT:
 
     debut = (racine.findtext(".//task/start_frame") or "0").strip()
     filtre = (racine.findtext(".//task/frame_filter") or "").strip()
-    if debut not in ("", "0") or filtre:
+    # « step=1 » (toutes les frames) équivaut à un filtre vide
+    if debut not in ("", "0") or filtre.replace(" ", "") not in ("", "step=1"):
         raise ValueError(
             f"{chemin.name} : l'export ne couvre pas toute la vidéo (start_frame = {debut}, "
             f"frame_filter = {filtre!r}) ; les numéros de frame ne correspondraient plus à "
